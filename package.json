@@ -1,6 +1,6 @@
 {
   "name": "multer-s3",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Streaming multer storage engine for AWS S3",
   "main": "index.js",
   "scripts": {
@@ -23,7 +23,6 @@
   },
   "homepage": "https://github.com/badunk/multer-s3#readme",
   "dependencies": {
-    "aws-sdk": "^2.1.39",
     "s3fs": "^2.0.1"
   },
   "devDependencies": {
