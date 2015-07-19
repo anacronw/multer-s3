@@ -24,12 +24,13 @@ var s3 = require('multer-s3');
 
 var upload = multer({
   storage: s3({
-  dirname: 'uploads/photos',
-  bucket: 'some-bucket',
-  secretAccessKey: 'some secret',
-  accessKeyId: 'some key',
-  region: 'us-east-1'
-})})
+    dirname: 'uploads/photos',
+    bucket: 'some-bucket',
+    secretAccessKey: 'some secret',
+    accessKeyId: 'some key',
+    region: 'us-east-1'
+  })
+})
 
 app.post('/upload', upload.array('photos', 3), function(req, res, next){
   res.send('Successfully uploaded!');
