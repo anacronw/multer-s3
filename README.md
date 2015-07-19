@@ -1,5 +1,5 @@
 # multer-s3
-streaming multer storage engine for amazon s3
+Streaming multer storage engine for AWS S3
 
 This project is mostly an integration piece for existing code samples from Multer's [storage engine documentation](https://github.com/expressjs/multer/blob/master/StorageEngine.md) with [s3fs](https://github.com/RiptideElements/s3fs) as the substitution piece for file system.  Existing solutions required buffering the multipart uploads into the actual filesystem.
 
@@ -26,7 +26,7 @@ var upload = multer({storage: s3({
   dirname: 'uploads/photos',
   bucket: 'some-bucket',
   secretAccessKey: 'some secret',
-  accessKeyId: 'some key', 
+  accessKeyId: 'some key',
   region: 'us-east-1'
 })})
 
@@ -34,4 +34,3 @@ app.post('/upload', upload.array('photos', 3), function(req, res, next){
   res.send('Successfully uploaded!');
 });
 ```
-

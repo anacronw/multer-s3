@@ -1,7 +1,7 @@
 {
   "name": "multer-s3",
-  "version": "1.0.0",
-  "description": "Multer storage for AWS s3",
+  "version": "1.0.2",
+  "description": "Streaming multer storage engine for AWS S3",
   "main": "index.js",
   "scripts": {
     "test": "mocha test/bootstrap.spec.js test/**/*.spec.js"

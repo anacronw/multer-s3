@@ -7,8 +7,8 @@ var AWS = require('aws-sdk')
 var upload = multer({storage: multers3({
   dirname: 'uploads/photos',
   bucket: 'some-bucket',
-  secretAccessKey: process.env.AWS_S3_SECRET,
-  accessKeyId: process.env.AWS_S3_KEY,
+  secretAccessKey: 'some secret',
+  accessKeyId: 'some key', 
   region: 'us-east-1',
   s3ForcePathStyle: true,
   endpoint: new AWS.Endpoint('http://localhost:4568')
