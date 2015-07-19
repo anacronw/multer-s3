@@ -1,0 +1,40 @@
+{
+  "name": "multer-s3",
+  "version": "1.0.0",
+  "description": "Multer storage for AWS s3",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test/bootstrap.spec.js test/**/*.spec.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/badunk/multer-s3.git"
+  },
+  "keywords": [
+    "multer",
+    "s3",
+    "amazon",
+    "aws"
+  ],
+  "author": "badunk",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/badunk/multer-s3/issues"
+  },
+  "homepage": "https://github.com/badunk/multer-s3#readme",
+  "dependencies": {
+    "aws-sdk": "^2.1.39",
+    "s3fs": "^2.0.1"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.1.39",
+    "chai": "^3.1.0",
+    "express": "^4.13.1",
+    "mkdirp": "^0.5.1",
+    "mocha": "^2.2.5",
+    "multer": "^1.0.0",
+    "rimraf": "^2.4.1",
+    "s3rver": "0.0.5",
+    "supertest": "^1.0.1"
+  }
+}
