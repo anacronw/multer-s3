@@ -13,17 +13,17 @@ function S3Storage (opts) {
   s3fs = new S3FS(options.bucket, options);
 }
 
-S3Storage.prototype._handleFile = function _handleFile (req, file, cb) {
+S3Storage.prototype._handleFile = function (req, file, cb) {
   var fileName = crypto.randomBytes(20).toString('hex');
-  var outStream = s3fs.createWriteStream(options.dirname + '/' + fileName + '.jpg');
+  var outStream = s3fs.createWriteStream(options.dirname + '/' + fileName);
   file.stream.pipe(outStream);
   outStream.on('error', cb);
   outStream.on('finish', function(){
-    cb(null, {size: outStream.bytesWritten})
+    cb(null, {size: outStream.bytesWritten, name: fileName})
   });
 }
 
-S3Storage.prototype._removeFile = function _removeFile (req, file, cb) {
+S3Storage.prototype._removeFile = function (req, file, cb) {
   s3fs.unlink(file.path, cb)
 }
 
