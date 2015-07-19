@@ -22,7 +22,8 @@ var app = express();
 var multer = require('multer');
 var s3 = require('multer-s3');
 
-var upload = multer({storage: s3({
+var upload = multer({
+  storage: s3({
   dirname: 'uploads/photos',
   bucket: 'some-bucket',
   secretAccessKey: 'some secret',
