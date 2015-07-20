@@ -36,7 +36,8 @@ describe('express', function(){
       .attach('photos', 'test/fixtures/ffffff.png')
       .end(function(err, res){
         lastReq.files.map(function(file){
-          file.should.have.property('name');
+          file.should.have.property('key');
+          file.key.should.have.string('uploads/photos')
         });
         done();
       });

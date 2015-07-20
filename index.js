@@ -19,7 +19,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
   file.stream.pipe(outStream);
   outStream.on('error', cb);
   outStream.on('finish', function(){
-    cb(null, {size: outStream.bytesWritten, name: fileName})
+    cb(null, {size: outStream.bytesWritten, key: options.dirname + '/' + fileName})
   });
 }
 
