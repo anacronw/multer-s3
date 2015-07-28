@@ -8,6 +8,13 @@ describe('multer-s3', function(){
   it('accepts s3 options', function(){
     multerS3({bucket: 'bucket', dirname: 'uploads/', accessKeyId: 'accessKeyId', secretAccessKey: 'secretAccessKey', region: 'region'})
   });
+  it('stores the options within each instance', function(){
+    var multer = multerS3({bucket: 'bucket', dirname: 'uploads/', accessKeyId: 'accessKeyId', secretAccessKey: 'secretAccessKey', region: 'region'})
+    var multer2 = multerS3({bucket: 'bucket2', dirname: 'uploads/', accessKeyId: 'accessKeyId', secretAccessKey: 'secretAccessKey', region: 'region'})
+    multer.should.have.property('options');
+    multer.options.bucket.should.equal('bucket')
+    multer2.options.bucket.should.equal('bucket2')
+  });
   it('implements _handleFile', function(){
     var upload = multerS3({bucket: 'bucket', dirname: 'uploads/', accessKeyId: 'accessKeyId', secretAccessKey: 'secretAccessKey', region: 'region'})
     upload._handleFile.should.be.a('function')
