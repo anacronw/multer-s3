@@ -13,7 +13,20 @@ function S3Storage (opts) {
 }
 
 S3Storage.prototype._handleFile = function (req, file, cb) {
-  var fileName = crypto.randomBytes(20).toString('hex')
+  var extension = file.originalname.slice(-4);
+  var originalFilename = file.originalname.slice(0, -4);
+
+  if (this.options.originalname) {
+    var fileName = file.originalname;
+    console.log('using original name: ', fileName);
+  } else if (!this.options.originalname && this.options.filename) {
+    var fileName = this.options.filename + extension;
+    console.log('using user-defined filename: ', fileName);
+  } else {
+    var fileName = crypto.randomBytes(20).toString('hex')
+    console.log('using crypo name: ', fileName);
+  }
+
   var filePath = this.options.dirname + '/' + fileName
   var outStream = this.s3fs.createWriteStream(filePath)
 
