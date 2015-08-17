@@ -16,6 +16,15 @@ npm test
 ```
 
 # Usage
+
+The options ```dirname```, ```bucket```, ```secretAccessKey```, ```accessKeyId```, and ```region``` are required.
+
+If you mark the option ```originalname``` as true then multer will upload the file with the same name and extension as the original uploaded file.
+
+If you provide a string for the ```filename``` option this will override the originalname option. Whatever string you provide will be used by multer for the upload. This file will be overwritten every time a new file is uploaded.
+
+If ```originalname``` and ```filename``` are not provided then the defaul crypto filename will be used.
+
 ```
 var express = require('express');
 var app = express();
@@ -28,7 +37,9 @@ var upload = multer({
     bucket: 'some-bucket',
     secretAccessKey: 'some secret',
     accessKeyId: 'some key',
-    region: 'us-east-1'
+    region: 'us-east-1',
+    originalname:, true // uses the uploaded filename and extensions. Expects a boolean.
+    filename: 'temp', // specify a custom filename for the upload. This will be overwritten everytime you upload something else. Expects a string.
   })
 })
 
