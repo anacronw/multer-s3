@@ -28,7 +28,10 @@ var upload = multer({
     bucket: 'some-bucket',
     secretAccessKey: 'some secret',
     accessKeyId: 'some key',
-    region: 'us-east-1'
+    region: 'us-east-1',
+    filename: function (req, file, cb) {
+      cb(null, Date.now())
+    }
   })
 })
 
