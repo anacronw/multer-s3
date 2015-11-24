@@ -48,7 +48,11 @@ function S3Storage (opts) {
 S3Storage.prototype._handleFile = function (req, file, cb) {
   var that = this
   that.getFilename(req, file, function (err, filename) {
+    if (err) return cb(err)
+
     that.getContentType(req, file, function (err, contentType, _stream) {
+      if (err) return cb(err)
+
       var currentSize = 0
       var filePath = that.options.dirname + '/' + filename
 
