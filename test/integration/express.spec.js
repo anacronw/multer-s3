@@ -7,7 +7,6 @@ var should = require('chai').should();
 var AWS = require('aws-sdk')
 var lastReq = lastRes = null;
 var upload = multer({storage: multers3({
-  dirname: 'uploads/photos',
   bucket: 'some-bucket',
   secretAccessKey: 'some secret',
   accessKeyId: 'some key',
@@ -16,7 +15,6 @@ var upload = multer({storage: multers3({
   endpoint: new AWS.Endpoint('http://localhost:4568')
 })});
 var uploadAuto = multer({storage: multers3({
-  dirname: 'uploads/photos',
   bucket: 'some-bucket',
   secretAccessKey: 'some secret',
   accessKeyId: 'some key',
@@ -52,7 +50,6 @@ describe('express', function(){
       .end(function(err, res){
         lastReq.files.map(function(file){
           file.should.have.property('key')
-          file.key.should.have.string('uploads/photos')
           file.should.have.property('size')
           file.size.should.equal(68)
         });
@@ -66,7 +63,6 @@ describe('express', function(){
       .end(function(err, res){
         lastReq.files.map(function(file){
           file.should.have.property('key')
-          file.key.should.have.string('uploads/photos')
           file.should.have.property('size')
           file.size.should.equal(68)
         });
