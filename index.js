@@ -64,10 +64,10 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
         if (ev.total) currentSize = ev.total
       })
 
-      upload.send(function (err) {
+      upload.send(function (err, data) {
         if (err) return cb(err)
 
-        cb(null, { size: currentSize, key: key })
+        cb(null, extend(data, { size: currentSize, key: key }))
       })
     })
   })
