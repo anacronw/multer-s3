@@ -36,7 +36,6 @@ function S3Storage (opts) {
   var s3cfg = extend(opts, { apiVersion: '2006-03-01' })
 
   delete s3cfg.bucket
-  delete s3cfg.dirname
 
   this.options = opts
   this.getKey = (opts.key || getKey)
@@ -64,10 +63,10 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
         if (ev.total) currentSize = ev.total
       })
 
-      upload.send(function (err, data) {
+      upload.send(function (err, result) {
         if (err) return cb(err)
 
-        cb(null, extend(data, { size: currentSize, key: key }))
+        cb(null, { size: currentSize, key: key, location: result.Location, etag: result.ETag })
       })
     })
   })
