@@ -7,7 +7,6 @@ var should = require('chai').should();
 var AWS = require('aws-sdk')
 var lastReq = lastRes = null;
 var upload = multer({storage: multers3({
-  dirname: 'uploads/photos',
   bucket: 'some-bucket',
   secretAccessKey: 'some secret',
   accessKeyId: 'some key',
@@ -16,14 +15,24 @@ var upload = multer({storage: multers3({
   endpoint: new AWS.Endpoint('http://localhost:4568')
 })});
 var uploadAuto = multer({storage: multers3({
-  dirname: 'uploads/photos',
   bucket: 'some-bucket',
   secretAccessKey: 'some secret',
   accessKeyId: 'some key',
   region: 'us-east-1',
   s3ForcePathStyle: true,
   endpoint: new AWS.Endpoint('http://localhost:4568'),
-  contentType: multers3.AUTO_CONTENT_TYPE
+  contentType: multers3.AUTO_CONTENT_TYPE,
+})});
+var uploadCustomKey = multer({storage: multers3({
+  bucket: 'some-bucket',
+  secretAccessKey: 'some secret',
+  accessKeyId: 'some key',
+  region: 'us-east-1',
+  s3ForcePathStyle: true,
+  endpoint: new AWS.Endpoint('http://localhost:4568'),
+  key: function(req, file, cb) {
+    cb(null, 'key-name');
+  }
 })});
 
 // express setup
@@ -33,6 +42,11 @@ app.post('/upload', upload.array('photos', 3), function(req, res, next){
   res.status(200).send();
 });
 app.post('/upload-auto', uploadAuto.array('photos', 3), function(req, res, next){
+  lastReq = req;
+  lastRes = res;
+  res.status(200).send();
+});
+app.post('/upload-custom', uploadCustomKey.array('photos', 3), function(req, res, next){
   lastReq = req;
   lastRes = res;
   res.status(200).send();
@@ -52,7 +66,6 @@ describe('express', function(){
       .end(function(err, res){
         lastReq.files.map(function(file){
           file.should.have.property('key')
-          file.key.should.have.string('uploads/photos')
           file.should.have.property('size')
           file.size.should.equal(68)
         });
@@ -66,11 +79,24 @@ describe('express', function(){
       .end(function(err, res){
         lastReq.files.map(function(file){
           file.should.have.property('key')
-          file.key.should.have.string('uploads/photos')
           file.should.have.property('size')
           file.size.should.equal(68)
         });
         done();
       });
+  });
+  it('calls a custom key function is provided', function(done) {
+      supertest(app)
+        .post('/upload-custom')
+        .attach('photos', 'test/fixtures/ffffff.png')
+        .expect(200)
+        .end(function(err, res) {
+            lastReq.files.map(function(file) {
+              file.should.have.property('key', 'key-name')
+              file.should.have.property('size')
+              file.size.should.equal(68)
+            })
+            done(err);
+        });
   });
 });
