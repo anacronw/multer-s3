@@ -33,6 +33,9 @@ function S3Storage (opts) {
   if (!opts.accessKeyId) throw new Error('accessKeyId is required')
   if (!opts.region) throw new Error('region is required')
   if (!opts.dirname) throw new Error('dirname is required')
+  if (!opts.acl) console.log('--------------------------------------------------------------\n'+
+                              '[MULTER S3] ACL is not specified, will used private by default\n'+
+                              '--------------------------------------------------------------')
 
   var s3cfg = extend(opts, { apiVersion: '2006-03-01' })
 
@@ -55,11 +58,13 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
 
       var currentSize = 0
       var filePath = that.options.dirname + '/' + filename
+      var acl = that.options.acl || 'private'
 
       var upload = that.s3.upload({
         Bucket: that.options.bucket,
         Key: filePath,
         ContentType: contentType,
+        ACL: acl,
         Body: (_stream || file.stream)
       })
 
