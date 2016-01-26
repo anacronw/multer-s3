@@ -29,7 +29,7 @@ var upload = multer({
     accessKeyId: 'some key',
     region: 'us-east-1',
     key: function (req, file, cb) {
-      cb(null, Date.now())
+      cb(null, Date.now().toString())
     }
   })
 })
