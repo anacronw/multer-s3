@@ -4,8 +4,8 @@ var crypto = require('crypto')
 var stream = require('stream')
 var fileType = require('file-type')
 
-function getKey (req, file, cb) {
-  crypto.pseudoRandomBytes(16, function (err, raw) {
+function defaultKey (req, file, cb) {
+  crypto.randomBytes(16, function (err, raw) {
     cb(err, err ? undefined : raw.toString('hex'))
   })
 }
@@ -38,7 +38,7 @@ function S3Storage (opts) {
   delete s3cfg.bucket
 
   this.options = opts
-  this.getKey = (opts.key || getKey)
+  this.getKey = (opts.key || defaultKey)
   this.getContentType = (opts.contentType || defaultContentType)
   this.s3 = new aws.S3(s3cfg)
 }
