@@ -14,6 +14,10 @@ function defaultContentType (req, file, cb) {
   setImmediate(function () { cb(null, 'application/octet-stream') })
 }
 
+function defaultMetadata (req, file, cb) {
+  setImmediate(function () { cb(null, null) })
+}
+
 function autoContentType (req, file, cb) {
   file.stream.once('data', function (firstChunk) {
     var type = fileType(firstChunk)
@@ -40,6 +44,7 @@ function S3Storage (opts) {
   this.options = opts
   this.getKey = (opts.key || defaultKey)
   this.getContentType = (opts.contentType || defaultContentType)
+  this.getMetadata = (opts.metaData || defaultMetaData)
   this.s3 = new aws.S3(s3cfg)
 }
 
@@ -51,22 +56,27 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
     that.getContentType(req, file, function (err, contentType, _stream) {
       if (err) return cb(err)
 
-      var currentSize = 0
-      var upload = that.s3.upload({
-        Bucket: that.options.bucket,
-        Key: key,
-        ContentType: contentType,
-        Body: (_stream || file.stream)
-      })
-
-      upload.on('httpUploadProgress', function (ev) {
-        if (ev.total) currentSize = ev.total
-      })
-
-      upload.send(function (err, result) {
+      that.getMetadata(req, file, function (err, metadata, _stream) {
         if (err) return cb(err)
 
-        cb(null, { size: currentSize, key: key, location: result.Location, etag: result.ETag })
+        var currentSize = 0
+        var upload = that.s3.upload({
+          Bucket: that.options.bucket,
+          Key: key,
+          ContentType: contentType,
+          Metadata: metadata,
+          Body: (_stream || file.stream)
+        })
+
+        upload.on('httpUploadProgress', function (ev) {
+          if (ev.total) currentSize = ev.total
+        })
+
+        upload.send(function (err, result) {
+          if (err) return cb(err)
+
+          cb(null, { size: currentSize, key: key, location: result.Location, etag: result.ETag })
+        })
       })
     })
   })
