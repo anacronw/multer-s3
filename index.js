@@ -55,6 +55,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
       var upload = that.s3.upload({
         Bucket: that.options.bucket,
         Key: key,
+        ACL: that.options.ACL || that.options.acl || {},
         ContentType: contentType,
         Body: (_stream || file.stream)
       })
