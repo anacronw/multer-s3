@@ -4,7 +4,7 @@
   "description": "Streaming multer storage engine for AWS S3",
   "main": "index.js",
   "scripts": {
-    "test": "standard && mocha test/bootstrap.spec.js test/**/*.spec.js"
+    "test": "standard && mocha test/basic.js"
   },
   "repository": {
     "type": "git",
@@ -23,19 +23,17 @@
   },
   "homepage": "https://github.com/badunk/multer-s3#readme",
   "dependencies": {
-    "aws-sdk": "^2.2.16",
-    "file-type": "^3.3.0",
-    "xtend": "^4.0.1"
+    "file-type": "^3.3.0"
   },
   "devDependencies": {
-    "chai": "^3.1.0",
+    "aws-sdk": "^2.2.32",
+    "concat-stream": "^1.5.1",
     "express": "^4.13.1",
-    "mkdirp": "^0.5.1",
+    "form-data": "^1.0.0-rc3",
     "mocha": "^2.2.5",
-    "multer": "^1.0.0",
-    "rimraf": "^2.4.1",
-    "s3rver": "0.0.5",
+    "multer": "^1.1.0",
+    "on-finished": "^2.3.0",
     "standard": "^5.4.1",
-    "supertest": "^1.0.1"
+    "xtend": "^4.0.1"
   }
 }

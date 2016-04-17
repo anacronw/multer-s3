@@ -13,18 +13,18 @@ npm install --save multer-s3
 ## Usage
 
 ```javascript
+var aws = require('aws-sdk')
 var express = require('express')
 var multer = require('multer')
-var s3 = require('multer-s3')
+var multerS3 = require('multer-s3')
 
 var app = express()
+var s3 = new aws.S3({ /* ... */ })
 
 var upload = multer({
-  storage: s3({
+  storage: multerS3({
+    s3: s3,
     bucket: 'some-bucket',
-    secretAccessKey: 'some secret',
-    accessKeyId: 'some key',
-    region: 'us-east-1',
     key: function (req, file, cb) {
       cb(null, Date.now().toString())
     }
@@ -38,7 +38,7 @@ app.post('/upload', upload.array('photos', 3), function(req, res, next) {
 
 ## Testing
 
-Tested with [s3rver](https://github.com/jamhall/s3rver) instead of your actual s3 credentials.  Doesn't require a real account or changing of hosts files.  Includes integration tests ensuring that it should work with express + multer.
+The tests mock all access to S3 and can be run completely offline.
 
 ```sh
 npm test
