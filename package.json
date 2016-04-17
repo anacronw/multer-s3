@@ -4,7 +4,7 @@
   "description": "Streaming multer storage engine for AWS S3",
   "main": "index.js",
   "scripts": {
-    "test": "standard && mocha test/bootstrap.spec.js test/**/*.spec.js"
+    "test": "standard && mocha test/basic.js"
   },
   "repository": {
     "type": "git",

@@ -2,7 +2,7 @@ var crypto = require('crypto')
 var stream = require('stream')
 var fileType = require('file-type')
 
-function staticVaule (value) {
+function staticValue (value) {
   return function (req, file, cb) {
     cb(null, value)
   }
@@ -60,7 +60,7 @@ function S3Storage (opts) {
 
   switch (typeof opts.bucket) {
     case 'function': this.getBucket = opts.bucket; break
-    case 'string': this.getBucket = staticVaule(opts.bucket); break
+    case 'string': this.getBucket = staticValue(opts.bucket); break
     case 'undefined': throw new Error('bucket is required')
     default: throw new TypeError('Expected opts.bucket to be undefined, string or function')
   }
