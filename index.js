@@ -14,6 +14,10 @@ function defaultKey (req, file, cb) {
   })
 }
 
+function defaultAcl (req, file, cb) {
+  setImmediate(function () { cb(null, 'private') })
+}
+
 function defaultContentType (req, file, cb) {
   setImmediate(function () { cb(null, 'application/octet-stream') })
 }
@@ -38,14 +42,19 @@ function collect (storage, req, file, cb) {
     storage.getKey(req, file, function (err, key) {
       if (err) return cb(err)
 
-      storage.getContentType(req, file, function (err, contentType, replacementStream) {
+      storage.getAcl(req, file, function (err, acl) {
         if (err) return cb(err)
 
-        cb.call(storage, null, {
-          bucket: bucket,
-          key: key,
-          contentType: contentType,
-          replacementStream: replacementStream
+        storage.getContentType(req, file, function (err, contentType, replacementStream) {
+          if (err) return cb(err)
+
+          cb.call(storage, null, {
+            bucket: bucket,
+            key: key,
+            acl: acl,
+            contentType: contentType,
+            replacementStream: replacementStream
+          })
         })
       })
     })
@@ -71,6 +80,13 @@ function S3Storage (opts) {
     default: throw new TypeError('Expected opts.key to be undefined or function')
   }
 
+  switch (typeof opts.acl) {
+    case 'function': this.getAcl = opts.acl; break
+    case 'string': this.getAcl = staticValue(opts.acl); break
+    case 'undefined': this.getAcl = defaultAcl; break
+    default: throw new TypeError('Expected opts.acl to be undefined, string or function')
+  }
+
   switch (typeof opts.contentType) {
     case 'function': this.getContentType = opts.contentType; break
     case 'undefined': this.getContentType = defaultContentType; break
@@ -86,6 +102,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
     var upload = this.s3.upload({
       Bucket: opts.bucket,
       Key: opts.key,
+      ACL: opts.acl,
       ContentType: opts.contentType,
       Body: (opts.replacementStream || file.stream)
     })
@@ -101,6 +118,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
         size: currentSize,
         bucket: opts.bucket,
         key: opts.key,
+        acl: opts.acl,
         contentType: opts.contentType,
         location: result.Location,
         etag: result.ETag
