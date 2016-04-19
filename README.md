@@ -36,6 +36,25 @@ app.post('/upload', upload.array('photos', 3), function(req, res, next) {
 })
 ```
 
+### Setting ACL
+
+[ACL values](http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectPOST.html#d0e24378) can be set by passing an optional `acl` parameter into the `multerS3` object.
+
+```javascript
+var upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: 'some-bucket',
+    acl: 'public-read',
+    key: function (req, file, cb) {
+      cb(null, Date.now().toString())
+    }
+  })
+})
+```
+
+Options: `private | public-read | public-read-write | aws-exec-read | authenticated-read | bucket-owner-read | bucket-owner-full-control`.
+
 ## Testing
 
 The tests mock all access to S3 and can be run completely offline.
