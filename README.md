@@ -36,6 +36,20 @@ app.post('/upload', upload.array('photos', 3), function(req, res, next) {
 })
 ```
 
+### File information
+
+Each file contains the following information exposed by `multer-s3`:
+
+Key | Description | Note
+--- | --- | ---
+`size` | Size of the file in bytes |
+`bucket` | The bucket used to store the file | `S3Storage`
+`key` | The name of the file | `S3Storage`
+`acl` | Access control for the file | `S3Storage`
+`contentType` | The `mimetype` used to upload the file | `S3Storage`
+`location` | The S3 `url` to access the file  | `S3Storage`
+`etag` | The `etag`of the uploaded file in S3  | `S3Storage`
+
 ### Setting ACL
 
 [ACL values](http://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) can be set by passing an optional `acl` parameter into the `multerS3` object.
@@ -65,7 +79,6 @@ Available options for canned ACL.
 | `bucket-owner-read` | Object owner gets `FULL_CONTROL`. Bucket owner gets `READ` access. If you specify this canned ACL when creating a bucket, Amazon S3 ignores it. |
 | `bucket-owner-full-control` | Both the object owner and the bucket owner get `FULL_CONTROL` over the object. If you specify this canned ACL when creating a bucket, Amazon S3 ignores it. |
 | `log-delivery-write` | The `LogDelivery` group gets `WRITE` and `READ_ACP` permissions on the bucket. For more information on logs. |
-
 
 
 ## Testing
