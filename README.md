@@ -36,6 +36,20 @@ app.post('/upload', upload.array('photos', 3), function(req, res, next) {
 })
 ```
 
+### File information
+
+Each file contains the following information exposed by `multer-s3`:
+
+Key | Description | Note
+--- | --- | ---
+`size` | Size of the file in bytes |
+`bucket` | The bucket used to store the file | `S3Storage`
+`key` | The name of the file | `S3Storage`
+`contentType` | The `mimetype` used to upload the file | `S3Storage`
+`location` | The S3 `url` to access the file  | `S3Storage`
+`etag` | The `etag`of the uploaded file in S3  | `S3Storage`
+
+
 ## Testing
 
 The tests mock all access to S3 and can be run completely offline.
