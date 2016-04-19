@@ -15,11 +15,11 @@ function defaultKey (req, file, cb) {
 }
 
 function defaultAcl (req, file, cb) {
-  setImmediate(function () { cb(null, 'private') })
+  setImmediate(cb, null, 'private')
 }
 
 function defaultContentType (req, file, cb) {
-  setImmediate(function () { cb(null, 'application/octet-stream') })
+  setImmediate(cb, null, 'application/octet-stream')
 }
 
 function autoContentType (req, file, cb) {

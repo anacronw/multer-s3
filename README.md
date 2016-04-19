@@ -1,4 +1,4 @@
-# Multer S3
+cd w  mul# Multer S3
 
 Streaming multer storage engine for AWS S3.
 
@@ -38,7 +38,7 @@ app.post('/upload', upload.array('photos', 3), function(req, res, next) {
 
 ### Setting ACL
 
-[ACL values](http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectPOST.html#d0e24378) can be set by passing an optional `acl` parameter into the `multerS3` object.
+[ACL values](http://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) can be set by passing an optional `acl` parameter into the `multerS3` object.
 
 ```javascript
 var upload = multer({
@@ -53,7 +53,20 @@ var upload = multer({
 })
 ```
 
-Options: `private | public-read | public-read-write | aws-exec-read | authenticated-read | bucket-owner-read | bucket-owner-full-control`.
+Available options for canned ACL.
+
+| ACL Option | Permissions added to ACL |
+|------------|--------------------------|
+| `private` | Owner gets `FULL_CONTROL`. No one else has access rights (default). |
+| `public-read` | Owner gets `FULL_CONTROL`. The `AllUsers` group gets `READ` access. |
+| `public-read-write` | Owner gets `FULL_CONTROL`. The `AllUsers` group gets `READ` and `WRITE` access. Granting this on a bucket is generally not recommended. |
+| `aws-exec-read` | Owner gets `FULL_CONTROL`. Amazon EC2 gets `READ` access to `GET` an Amazon Machine Image (AMI) bundle from Amazon S3. |
+| `authenticated-read` | Owner gets `FULL_CONTROL`. The `AuthenticatedUsers` group gets `READ` access. |
+| `bucket-owner-read` | Object owner gets `FULL_CONTROL`. Bucket owner gets `READ` access. If you specify this canned ACL when creating a bucket, Amazon S3 ignores it. |
+| `bucket-owner-full-control` | Both the object owner and the bucket owner get `FULL_CONTROL` over the object. If you specify this canned ACL when creating a bucket, Amazon S3 ignores it. |
+| `log-delivery-write` | The `LogDelivery` group gets `WRITE` and `READ_ACP` permissions on the bucket. For more information on logs. |
+
+
 
 ## Testing
 
