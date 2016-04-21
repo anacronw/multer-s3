@@ -90,7 +90,7 @@ The `metadata` option is a callback that accepts the request and file, and retur
 
 Here is an example that stores all fields in the request body as metadata, and uses an `id` param as the key: 
 
-```
+```javascript
 var opts = {
     s3: s3,
     bucket: config.originalsBucket,
