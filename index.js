@@ -98,17 +98,27 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
   collect(this, req, file, function (err, opts) {
     if (err) return cb(err)
 
+    var fileBuffer
     var currentSize = 0
+    var streamer = (opts.replacementStream || file.stream)
     var upload = this.s3.upload({
       Bucket: opts.bucket,
       Key: opts.key,
       ACL: opts.acl,
       ContentType: opts.contentType,
-      Body: (opts.replacementStream || file.stream)
+      Body: streamer
     })
 
     upload.on('httpUploadProgress', function (ev) {
       if (ev.total) currentSize = ev.total
+    })
+
+    streamer.on('data', function (chunk) {
+      if (!fileBuffer) {
+        fileBuffer = Buffer.concat([chunk])
+      } else {
+        fileBuffer = Buffer.concat([fileBuffer, chunk])
+      }
     })
 
     upload.send(function (err, result) {
@@ -121,7 +131,8 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
         acl: opts.acl,
         contentType: opts.contentType,
         location: result.Location,
-        etag: result.ETag
+        etag: result.ETag,
+        buffer: fileBuffer
       })
     })
   })
