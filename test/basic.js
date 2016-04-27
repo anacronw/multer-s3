@@ -83,6 +83,8 @@ describe('Multer S3', function () {
       assert.equal(req.file.bucket, 'test')
       assert.equal(req.file.etag, 'mock-etag')
       assert.equal(req.file.location, 'mock-location')
+      assert.equal(typeof req.file.buffer, 'object')
+      assert.equal(req.file.buffer.length, 68)
 
       done()
     })
