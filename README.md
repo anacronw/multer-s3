@@ -25,6 +25,9 @@ var upload = multer({
   storage: multerS3({
     s3: s3,
     bucket: 'some-bucket',
+    metadata: function (req, file, cb) {
+      cb(null, {fieldName: req.params.fieldName});
+    }
     key: function (req, file, cb) {
       cb(null, Date.now().toString())
     }
@@ -47,6 +50,7 @@ Key | Description | Note
 `key` | The name of the file | `S3Storage`
 `acl` | Access control for the file | `S3Storage`
 `contentType` | The `mimetype` used to upload the file | `S3Storage`
+`metadata` | The `metadata` object to be sent to S3 | `S3Storage`
 `location` | The S3 `url` to access the file  | `S3Storage`
 `etag` | The `etag`of the uploaded file in S3  | `S3Storage`
 
@@ -79,6 +83,25 @@ ACL Option | Permissions added to ACL
 `bucket-owner-read` | Object owner gets `FULL_CONTROL`. Bucket owner gets `READ` access. If you specify this canned ACL when creating a bucket, Amazon S3 ignores it.
 `bucket-owner-full-control` | Both the object owner and the bucket owner get `FULL_CONTROL` over the object. If you specify this canned ACL when creating a bucket, Amazon S3 ignores it.
 `log-delivery-write` | The `LogDelivery` group gets `WRITE` and `READ_ACP` permissions on the bucket. For more information on logs.
+
+## Setting Metadata
+
+The `metadata` option is a callback that accepts the request and file, and returns a metadata object to be saved to S3.
+
+Here is an example that stores all fields in the request body as metadata, and uses an `id` param as the key: 
+
+```javascript
+var opts = {
+    s3: s3,
+    bucket: config.originalsBucket,
+    metadata: function (req, file, cb) {
+      cb(null, Object.assign({}, req.body));
+    },
+    key: function (req, file, cb) {
+      cb(null, req.params.id + ".jpg");
+    }
+  };
+```
 
 
 ## Testing

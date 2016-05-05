@@ -22,6 +22,10 @@ function defaultContentType (req, file, cb) {
   setImmediate(cb, null, 'application/octet-stream')
 }
 
+function defaultMetadata (req, file, cb) {
+  setImmediate(cb, null, null)
+}
+
 function autoContentType (req, file, cb) {
   file.stream.once('data', function (firstChunk) {
     var type = fileType(firstChunk)
@@ -45,15 +49,20 @@ function collect (storage, req, file, cb) {
       storage.getAcl(req, file, function (err, acl) {
         if (err) return cb(err)
 
-        storage.getContentType(req, file, function (err, contentType, replacementStream) {
+        storage.getMetadata(req, file, function (err, metadata) {
           if (err) return cb(err)
 
-          cb.call(storage, null, {
-            bucket: bucket,
-            key: key,
-            acl: acl,
-            contentType: contentType,
-            replacementStream: replacementStream
+          storage.getContentType(req, file, function (err, contentType, replacementStream) {
+            if (err) return cb(err)
+
+            cb.call(storage, null, {
+              bucket: bucket,
+              key: key,
+              acl: acl,
+              metadata: metadata,
+              contentType: contentType,
+              replacementStream: replacementStream
+            })
           })
         })
       })
@@ -92,6 +101,12 @@ function S3Storage (opts) {
     case 'undefined': this.getContentType = defaultContentType; break
     default: throw new TypeError('Expected opts.contentType to be undefined or function')
   }
+
+  switch (typeof opts.metadata) {
+    case 'function': this.getMetadata = opts.metadata; break
+    case 'undefined': this.getMetadata = defaultMetadata; break
+    default: throw new TypeError('Expected opts.metadata to be undefined or function')
+  }
 }
 
 S3Storage.prototype._handleFile = function (req, file, cb) {
@@ -104,6 +119,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
       Key: opts.key,
       ACL: opts.acl,
       ContentType: opts.contentType,
+      Metadata: opts.metadata,
       Body: (opts.replacementStream || file.stream)
     })
 
@@ -120,6 +136,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
         key: opts.key,
         acl: opts.acl,
         contentType: opts.contentType,
+        metadata: opts.metadata,
         location: result.Location,
         etag: result.ETag
       })
