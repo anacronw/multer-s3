@@ -27,7 +27,7 @@ var upload = multer({
     bucket: 'some-bucket',
     metadata: function (req, file, cb) {
       cb(null, {fieldName: req.params.fieldName});
-    }
+    },
     key: function (req, file, cb) {
       cb(null, Date.now().toString())
     }
