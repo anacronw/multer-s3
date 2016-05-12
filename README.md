@@ -103,6 +103,24 @@ var opts = {
   };
 ```
 
+## Setting Cache-Control header
+
+The optional `cacheControl` option sets the `Cache-Control` HTTP header that will be sent if you're serving the files directly from S3. You can pass either a string or a function that returns a string.
+
+Here is an example that will tell browsers and CDNs to cache the file for one year:
+
+```javascript
+var upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: 'some-bucket',
+    cacheControl: 'max-age=31536000',
+    key: function (req, file, cb) {
+      cb(null, Date.now().toString())
+    }
+  })
+})
+```
 
 ## Testing
 
