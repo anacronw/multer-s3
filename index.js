@@ -1,6 +1,7 @@
 var crypto = require('crypto')
 var stream = require('stream')
 var fileType = require('file-type')
+var parallel = require('run-parallel')
 
 function staticValue (value) {
   return function (req, file, cb) {
@@ -8,26 +9,16 @@ function staticValue (value) {
   }
 }
 
+var defaultAcl = staticValue('private')
+var defaultContentType = staticValue('application/octet-stream')
+
+var defaultMetadata = staticValue(null)
+var defaultCacheControl = staticValue(null)
+
 function defaultKey (req, file, cb) {
   crypto.randomBytes(16, function (err, raw) {
     cb(err, err ? undefined : raw.toString('hex'))
   })
-}
-
-function defaultAcl (req, file, cb) {
-  setImmediate(cb, null, 'private')
-}
-
-function defaultContentType (req, file, cb) {
-  setImmediate(cb, null, 'application/octet-stream')
-}
-
-function defaultMetadata (req, file, cb) {
-  setImmediate(cb, null, null)
-}
-
-function defaultCacheControl (req, file, cb) {
-  setImmediate(cb, null, null)
 }
 
 function autoContentType (req, file, cb) {
@@ -44,36 +35,26 @@ function autoContentType (req, file, cb) {
 }
 
 function collect (storage, req, file, cb) {
-  storage.getBucket(req, file, function (err, bucket) {
+  parallel([
+    storage.getBucket.bind(storage, req, file),
+    storage.getKey.bind(storage, req, file),
+    storage.getAcl.bind(storage, req, file),
+    storage.getMetadata.bind(storage, req, file),
+    storage.getCacheControl.bind(storage, req, file)
+  ], function (err, values) {
     if (err) return cb(err)
 
-    storage.getKey(req, file, function (err, key) {
+    storage.getContentType(req, file, function (err, contentType, replacementStream) {
       if (err) return cb(err)
 
-      storage.getAcl(req, file, function (err, acl) {
-        if (err) return cb(err)
-
-        storage.getMetadata(req, file, function (err, metadata) {
-          if (err) return cb(err)
-
-          storage.getCacheControl(req, file, function (err, cacheControl) {
-            if (err) return cb(err)
-
-            storage.getContentType(req, file, function (err, contentType, replacementStream) {
-              if (err) return cb(err)
-
-              cb.call(storage, null, {
-                bucket: bucket,
-                key: key,
-                acl: acl,
-                metadata: metadata,
-                cacheControl: cacheControl,
-                contentType: contentType,
-                replacementStream: replacementStream
-              })
-            })
-          })
-        })
+      cb.call(storage, null, {
+        bucket: values[0],
+        key: values[1],
+        acl: values[2],
+        metadata: values[3],
+        cacheControl: values[4],
+        contentType: contentType,
+        replacementStream: replacementStream
       })
     })
   })
