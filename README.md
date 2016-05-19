@@ -122,6 +122,24 @@ var upload = multer({
 })
 ```
 
+## Setting Custom Content-Type
+
+The optional `contentType` option can be used to set Content/mime type of the file. By default the content type is set to `application/octet-stream`. If you want multer-s3 to automatically find the content-type of the file, use the `multerS3.AUTO_CONTENT_TYPE` constant. Here is an example that will detect the content type of the file being uploaded.
+
+```javascript
+var upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: 'some-bucket',
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    key: function (req, file, cb) {
+      cb(null, Date.now().toString())
+    }
+  })
+})
+```
+You may also use a function as the `contentType`, which should be of the form `function(req, file, cb)`.
+
 ## Testing
 
 The tests mock all access to S3 and can be run completely offline.
