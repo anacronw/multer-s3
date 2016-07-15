@@ -53,6 +53,7 @@ Key | Description | Note
 `metadata` | The `metadata` object to be sent to S3 | `S3Storage`
 `location` | The S3 `url` to access the file  | `S3Storage`
 `etag` | The `etag`of the uploaded file in S3  | `S3Storage`
+`sse` | The `ServerSideEncryption` to be used for the uploaded file in S3 | `S3Storage` 
 
 ### Setting ACL
 
@@ -139,6 +140,59 @@ var upload = multer({
 })
 ```
 You may also use a function as the `contentType`, which should be of the form `function(req, file, cb)`.
+
+### Setting ServerSideEncryption
+
+[SSE values](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#upload-property) can be set by passing an optional `sse` parameter into the `multerS3` object.
+
+```javascript
+var upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: 'some-bucket',
+    acl: 'public-read',
+    sse: 'AES256',
+    key: function (req, file, cb) {
+      cb(null, Date.now().toString())
+    }
+  })
+})
+```
+
+Available options for ServerSideEncryption.
+
+ServerSideEncryption Option |algorithm used
+--- | ---
+`AES256` | Standard AES 256 algorithm
+`aws:kms` | [Amazon Managed Encryption](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html)
+
+### Setting StorageClass
+
+[storageClass values](https://aws.amazon.com/s3/storage-classes/) can be set by passing an optional `storageClass` parameter into the `multerS3` object.
+
+```javascript
+var upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: 'some-bucket',
+    acl: 'public-read',
+    sse: 'AES256',
+    storageClass: 'REDUCED_REDUNDANCY',
+    key: function (req, file, cb) {
+      cb(null, Date.now().toString())
+    }
+  })
+})
+```
+
+Available options for StorageClass.
+
+StorageClass Option | The type of storage to use for the object.
+--- | ---
+`STANDARD` |  high durability, availability, and performance object storage for frequently accessed data
+`REDUCED_REDUNDANCY` | designed for noncritical, reproducible data stored at lower levels of redundancy than the STANDARD storage class, which reduces storage costs. 
+`STANDARD_IA` | - IA(infrequent access) offers the high durability, throughput, and low latency of Standard, with a low per GB storage price and per GB retrieval fee
+
 
 ## Testing
 
