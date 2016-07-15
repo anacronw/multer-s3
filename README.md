@@ -54,6 +54,7 @@ Key | Description | Note
 `location` | The S3 `url` to access the file  | `S3Storage`
 `etag` | The `etag`of the uploaded file in S3  | `S3Storage`
 `sse` | The `ServerSideEncryption` to be used for the uploaded file in S3 | `S3Storage` 
+`storageClass` | The `storageClass` to be used for the uploaded file in S3 | `S3Storage` 
 
 ### Setting ACL
 
