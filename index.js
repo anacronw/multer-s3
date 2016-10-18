@@ -15,6 +15,9 @@ var defaultContentType = staticValue('application/octet-stream')
 var defaultMetadata = staticValue(null)
 var defaultCacheControl = staticValue(null)
 
+var defaultSSECustomerAlgorithm = staticValue(null)
+var defaultSSECustomerKey = staticValue(null)
+
 function defaultKey (req, file, cb) {
   crypto.randomBytes(16, function (err, raw) {
     cb(err, err ? undefined : raw.toString('hex'))
@@ -40,7 +43,9 @@ function collect (storage, req, file, cb) {
     storage.getKey.bind(storage, req, file),
     storage.getAcl.bind(storage, req, file),
     storage.getMetadata.bind(storage, req, file),
-    storage.getCacheControl.bind(storage, req, file)
+    storage.getCacheControl.bind(storage, req, file),
+    storage.getSSECustomerAlgorithm.bind(storage, req, file),
+    storage.getSSECustomerKey.bind(storage, req, file)
   ], function (err, values) {
     if (err) return cb(err)
 
@@ -54,7 +59,10 @@ function collect (storage, req, file, cb) {
         metadata: values[3],
         cacheControl: values[4],
         contentType: contentType,
-        replacementStream: replacementStream
+        replacementStream: replacementStream,
+        sseCustomerAlgorithm: values[5],
+        sseCustomerKey: values[6],
+        sseCustomerKeyMD5: values[6] ? crypto.createHash('md5').update(values[6]).digest("base64") : null
       })
     })
   })
@@ -104,6 +112,19 @@ function S3Storage (opts) {
     case 'undefined': this.getCacheControl = defaultCacheControl; break
     default: throw new TypeError('Expected opts.cacheControl to be undefined, string or function')
   }
+
+  switch (typeof opts.sseCustomerAlgorithm) {
+    case 'string': this.getSSECustomerAlgorithm = staticValue(opts.sseCustomerAlgorithm); break
+    case 'undefined': this.getSSECustomerAlgorithm = defaultSSECustomerAlgorithm; break
+    default: throw new TypeError('Expected opts.sseCustomerAlgorithm to be undefined or string')
+  }
+
+  switch (typeof opts.sseCustomerKey) {
+    case 'function': this.getSSECustomerKey = opts.sseCustomerKey; break
+    case 'string': this.getSSECustomerKey = staticValue(opts.sseCustomerKey); break
+    case 'undefined': this.getSSECustomerKey = defaultSSECustomerKey; break
+    default: throw new TypeError('Expected opts.sseCustomerKey to be undefined, string or function')
+  }
 }
 
 S3Storage.prototype._handleFile = function (req, file, cb) {
@@ -118,8 +139,24 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
       CacheControl: opts.cacheControl,
       ContentType: opts.contentType,
       Metadata: opts.metadata,
-      Body: (opts.replacementStream || file.stream)
+      Body: (opts.replacementStream || file.stream),
+      SSECustomerAlgorithm: opts.sseCustomerAlgorithm,
+      SSECustomerKey: opts.sseCustomerKey,
+      SSECustomerKeyMD5: opts.sseCustomerKeyMD5
     })
+
+    console.log({
+      Bucket: opts.bucket,
+      Key: opts.key,
+      ACL: opts.acl,
+      CacheControl: opts.cacheControl,
+      ContentType: opts.contentType,
+      Metadata: opts.metadata,
+      Body: (opts.replacementStream || file.stream),
+      SSECustomerAlgorithm: opts.sseCustomerAlgorithm,
+      SSECustomerKey: opts.sseCustomerKey,
+      SSECustomerKeyMD5: opts.sseCustomerKeyMD5
+    });
 
     upload.on('httpUploadProgress', function (ev) {
       if (ev.total) currentSize = ev.total
@@ -136,7 +173,9 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
         contentType: opts.contentType,
         metadata: opts.metadata,
         location: result.Location,
-        etag: result.ETag
+        etag: result.ETag,
+        sseCustomerAlgorithm: opts.sseCustomerAlgorithm,
+        sseCustomerKey: opts.sseCustomerKey
       })
     })
   })

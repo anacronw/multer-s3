@@ -140,6 +140,28 @@ var upload = multer({
 ```
 You may also use a function as the `contentType`, which should be of the form `function(req, file, cb)`.
 
+## Setting SSE-C Encryption
+
+The `sseCustomerAlgorithm` option is a string that contains the algorithm to use for encrypt your file. 
+The `sseCustomerKey` option is a string that contains the encryption key used to encrypt the file, it should be setted as string or using the callback of the form `function(req, file, cb)`.
+
+```javascript
+
+var upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: 'some-bucket',
+    key: function (req, file, cb) {
+      cb(null, Date.now().toString())
+    },
+    sseCustomerAlgorithm: 'AES256',
+    sseCustomerKey: function(req, file, cb){
+      cb(null, 'mykey')
+    }
+  })
+})
+```
+
 ## Testing
 
 The tests mock all access to S3 and can be run completely offline.

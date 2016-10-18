@@ -64,7 +64,14 @@ describe('Multer S3', function () {
   it('upload files', function (done) {
     var s3 = mockS3()
     var form = new FormData()
-    var storage = multerS3({ s3: s3, bucket: 'test' })
+    var storage = multerS3({
+      s3: s3,
+      bucket: 'test',
+      SSECustomerAlgorithm: 'AES256',
+      SSECustomerKey: function(req, file, cb){
+        cb(null, 'mykey')
+      }
+    })
     var upload = multer({ storage: storage })
     var parser = upload.single('image')
     var image = fs.createReadStream(path.join(__dirname, 'files', 'ffffff.png'))
