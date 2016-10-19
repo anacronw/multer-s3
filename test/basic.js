@@ -68,7 +68,7 @@ describe('Multer S3', function () {
       s3: s3,
       bucket: 'test',
       SSECustomerAlgorithm: 'AES256',
-      SSECustomerKey: function(req, file, cb){
+      SSECustomerKey: function (req, file, cb) {
         cb(null, 'mykey')
       }
     })

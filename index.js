@@ -62,7 +62,7 @@ function collect (storage, req, file, cb) {
         replacementStream: replacementStream,
         sseCustomerAlgorithm: values[5],
         sseCustomerKey: values[6],
-        sseCustomerKeyMD5: values[6] ? crypto.createHash('md5').update(values[6]).digest("base64") : null
+        sseCustomerKeyMD5: values[6] ? crypto.createHash('md5').update(values[6]).digest('base64') : null
       })
     })
   })
@@ -144,19 +144,6 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
       SSECustomerKey: opts.sseCustomerKey,
       SSECustomerKeyMD5: opts.sseCustomerKeyMD5
     })
-
-    console.log({
-      Bucket: opts.bucket,
-      Key: opts.key,
-      ACL: opts.acl,
-      CacheControl: opts.cacheControl,
-      ContentType: opts.contentType,
-      Metadata: opts.metadata,
-      Body: (opts.replacementStream || file.stream),
-      SSECustomerAlgorithm: opts.sseCustomerAlgorithm,
-      SSECustomerKey: opts.sseCustomerKey,
-      SSECustomerKeyMD5: opts.sseCustomerKeyMD5
-    });
 
     upload.on('httpUploadProgress', function (ev) {
       if (ev.total) currentSize = ev.total
