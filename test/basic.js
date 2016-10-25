@@ -97,12 +97,12 @@ describe('Multer S3', function () {
       shouldTransform: true,
       transforms: [{
         key: 'test',
-        transform (req, file, cb) {
+        transform: function (req, file, cb) {
           cb(null, new stream.PassThrough())
         }
       }, {
         key: 'test2',
-        transform (req, file, cb) {
+        transform: function (req, file, cb) {
           cb(null, new stream.PassThrough())
         }
       }]
