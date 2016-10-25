@@ -170,6 +170,7 @@ var upload = multer({
       }
     }]
   })
+})
 ```
 If this option is used, each file passed to your router request will have a `transforms` array, with every transform you defined.
 ```json
