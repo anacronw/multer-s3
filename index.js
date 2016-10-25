@@ -134,6 +134,7 @@ function S3Storage (opts) {
       case 'function': break
       default: throw new TypeError('Expected opts.transform[].transform to be function')
     }
+    return transform
   })
 }
 
