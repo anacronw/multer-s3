@@ -14,6 +14,7 @@ var defaultContentType = staticValue('application/octet-stream')
 
 var defaultMetadata = staticValue(null)
 var defaultCacheControl = staticValue(null)
+var defaultContentDisposition = staticValue(null)
 
 function defaultKey (req, file, cb) {
   crypto.randomBytes(16, function (err, raw) {
@@ -40,7 +41,8 @@ function collect (storage, req, file, cb) {
     storage.getKey.bind(storage, req, file),
     storage.getAcl.bind(storage, req, file),
     storage.getMetadata.bind(storage, req, file),
-    storage.getCacheControl.bind(storage, req, file)
+    storage.getCacheControl.bind(storage, req, file),
+    storage.getContentDisposition.bind(storage, req, file)
   ], function (err, values) {
     if (err) return cb(err)
 
@@ -53,6 +55,7 @@ function collect (storage, req, file, cb) {
         acl: values[2],
         metadata: values[3],
         cacheControl: values[4],
+        contentDisposition: values[5],
         contentType: contentType,
         replacementStream: replacementStream
       })
@@ -104,6 +107,13 @@ function S3Storage (opts) {
     case 'undefined': this.getCacheControl = defaultCacheControl; break
     default: throw new TypeError('Expected opts.cacheControl to be undefined, string or function')
   }
+
+  switch (typeof opts.contentDisposition) {
+    case 'function': this.getContentDisposition = opts.contentDisposition; break
+    case 'string': this.getContentDisposition = staticValue(opts.contentDisposition); break
+    case 'undefined': this.getContentDisposition = defaultContentDisposition; break
+    default: throw new TypeError('Expected opts.contentDisposition to be undefined, string or function')
+  }
 }
 
 S3Storage.prototype._handleFile = function (req, file, cb) {
@@ -111,7 +121,8 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
     if (err) return cb(err)
 
     var currentSize = 0
-    var upload = this.s3.upload({
+
+    var params = {
       Bucket: opts.bucket,
       Key: opts.key,
       ACL: opts.acl,
@@ -119,7 +130,13 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
       ContentType: opts.contentType,
       Metadata: opts.metadata,
       Body: (opts.replacementStream || file.stream)
-    })
+    }
+
+    if (opts.contentDisposition) {
+      params.ContentDisposition = opts.contentDisposition
+    }
+
+    var upload = this.s3.upload(params)
 
     upload.on('httpUploadProgress', function (ev) {
       if (ev.total) currentSize = ev.total
@@ -134,6 +151,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
         key: opts.key,
         acl: opts.acl,
         contentType: opts.contentType,
+        contentDisposition: opts.contentDisposition,
         metadata: opts.metadata,
         location: result.Location,
         etag: result.ETag
