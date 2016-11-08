@@ -53,6 +53,8 @@ Key | Description | Note
 `metadata` | The `metadata` object to be sent to S3 | `S3Storage`
 `location` | The S3 `url` to access the file  | `S3Storage`
 `etag` | The `etag`of the uploaded file in S3  | `S3Storage`
+`contentDisposition` | The `contentDisposition` used to upload the file | `S3Storage`
+`storageClass` | The `storageClass` to be used for the uploaded file in S3 | `S3Storage`
 
 ### Setting ACL
 
@@ -139,6 +141,42 @@ var upload = multer({
 })
 ```
 You may also use a function as the `contentType`, which should be of the form `function(req, file, cb)`.
+
+## Setting StorageClass
+
+[storageClass values](https://aws.amazon.com/s3/storage-classes/) can be set by passing an optional `storageClass` parameter into the `multerS3` object.
+
+```javascript
+var upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: 'some-bucket',
+    acl: 'public-read',
+    storageClass: 'REDUCED_REDUNDANCY',
+    key: function (req, file, cb) {
+      cb(null, Date.now().toString())
+    }
+  })
+})
+```
+
+## Setting Content-Disposition
+
+The optional `contentDisposition` option can be used to set the `Content-Disposition` header for the uploaded file. By default, the `contentDisposition` isn't forwarded. As an example below, using the value `attachment` forces the browser to download the uploaded file instead of trying to open it.
+
+```javascript
+var upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: 'some-bucket',
+    acl: 'public-read',
+    contentDisposition: 'attachment',
+    key: function (req, file, cb) {
+      cb(null, Date.now().toString())
+    }
+  })
+})
+```
 
 ## Testing
 
