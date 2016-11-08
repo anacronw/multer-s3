@@ -15,6 +15,7 @@ var defaultContentType = staticValue('application/octet-stream')
 var defaultMetadata = staticValue(null)
 var defaultCacheControl = staticValue(null)
 var defaultContentDisposition = staticValue(null)
+var defaultStorageClass = staticValue('STANDARD')
 
 function defaultKey (req, file, cb) {
   crypto.randomBytes(16, function (err, raw) {
@@ -42,7 +43,8 @@ function collect (storage, req, file, cb) {
     storage.getAcl.bind(storage, req, file),
     storage.getMetadata.bind(storage, req, file),
     storage.getCacheControl.bind(storage, req, file),
-    storage.getContentDisposition.bind(storage, req, file)
+    storage.getContentDisposition.bind(storage, req, file),
+    storage.getStorageClass.bind(storage, req, file)
   ], function (err, values) {
     if (err) return cb(err)
 
@@ -56,6 +58,7 @@ function collect (storage, req, file, cb) {
         metadata: values[3],
         cacheControl: values[4],
         contentDisposition: values[5],
+        storageClass: values[6],
         contentType: contentType,
         replacementStream: replacementStream
       })
@@ -114,6 +117,13 @@ function S3Storage (opts) {
     case 'undefined': this.getContentDisposition = defaultContentDisposition; break
     default: throw new TypeError('Expected opts.contentDisposition to be undefined, string or function')
   }
+
+  switch (typeof opts.storageClass) {
+    case 'function': this.getStorageClass = opts.storageClass; break
+    case 'string': this.getStorageClass = staticValue(opts.storageClass); break
+    case 'undefined': this.getStorageClass = defaultStorageClass; break
+    default: throw new TypeError('Expected opts.storageClass to be undefined, string or function')
+  }
 }
 
 S3Storage.prototype._handleFile = function (req, file, cb) {
@@ -129,6 +139,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
       CacheControl: opts.cacheControl,
       ContentType: opts.contentType,
       Metadata: opts.metadata,
+      StorageClass: opts.storageClass,
       Body: (opts.replacementStream || file.stream)
     }
 
@@ -152,6 +163,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
         acl: opts.acl,
         contentType: opts.contentType,
         contentDisposition: opts.contentDisposition,
+        storageClass: opts.storageClass,
         metadata: opts.metadata,
         location: result.Location,
         etag: result.ETag
