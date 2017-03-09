@@ -140,7 +140,7 @@ function S3Storage (opts) {
 
   switch (typeof opts.sseKms) {
     case 'function': this.getSSEKMS = opts.sseKms; break
-    case 'string': this.getSSEKMS = opts.sseKms; break
+    case 'string': this.getSSEKMS = staticValue(opts.sseKms); break
     case 'undefined': this.getSSEKMS = defaultSSEKMS; break
     default: throw new TypeError('Expected opts.sseKms to be undefined, string, or function')
   }
