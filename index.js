@@ -65,8 +65,8 @@ function collect (storage, req, file, cb) {
         storageClass: values[6],
         contentType: contentType,
         replacementStream: replacementStream,
-        sse: values[7],
-        sseKms: values[8]
+        serverSideEncryption: values[7],
+        sseKmsKeyId: values[8]
       })
     })
   })
@@ -131,18 +131,18 @@ function S3Storage (opts) {
     default: throw new TypeError('Expected opts.storageClass to be undefined, string or function')
   }
 
-  switch (typeof opts.sse) {
-    case 'function': this.getSSE = opts.sse; break
-    case 'string': this.getSSE = staticValue(opts.sse); break
+  switch (typeof opts.serverSideEncryption) {
+    case 'function': this.getSSE = opts.serverSideEncryption; break
+    case 'string': this.getSSE = staticValue(opts.serverSideEncryption); break
     case 'undefined': this.getSSE = defaultSSE; break
-    default: throw new TypeError('Expected opts.sse to be undefined, string or function')
+    default: throw new TypeError('Expected opts.serverSideEncryption to be undefined, string or function')
   }
 
-  switch (typeof opts.sseKms) {
-    case 'function': this.getSSEKMS = opts.sseKms; break
-    case 'string': this.getSSEKMS = staticValue(opts.sseKms); break
+  switch (typeof opts.sseKmsKeyId) {
+    case 'function': this.getSSEKMS = opts.sseKmsKeyId; break
+    case 'string': this.getSSEKMS = staticValue(opts.sseKmsKeyId); break
     case 'undefined': this.getSSEKMS = defaultSSEKMS; break
-    default: throw new TypeError('Expected opts.sseKms to be undefined, string, or function')
+    default: throw new TypeError('Expected opts.sseKmsKeyId to be undefined, string, or function')
   }
 }
 
@@ -160,8 +160,8 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
       ContentType: opts.contentType,
       Metadata: opts.metadata,
       StorageClass: opts.storageClass,
-      ServerSideEncryption: opts.sse,
-      SSEKMSKeyId: opts.sseKms,
+      ServerSideEncryption: opts.serverSideEncryption,
+      SSEKMSKeyId: opts.sseKmsKeyId,
       Body: (opts.replacementStream || file.stream)
     }
 
@@ -186,7 +186,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
         contentType: opts.contentType,
         contentDisposition: opts.contentDisposition,
         storageClass: opts.storageClass,
-        serverSideEncryption: opts.sse,
+        serverSideEncryption: opts.serverSideEncryption,
         metadata: opts.metadata,
         location: result.Location,
         etag: result.ETag

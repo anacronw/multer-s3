@@ -91,7 +91,7 @@ describe('Multer S3', function () {
   it('uploads file with AES256 server-side encryption', function (done) {
     var s3 = mockS3()
     var form = new FormData()
-    var storage = multerS3({ s3: s3, bucket: 'test', sse: 'AES256' })
+    var storage = multerS3({ s3: s3, bucket: 'test', serverSideEncryption: 'AES256' })
     var upload = multer({ storage: storage })
     var parser = upload.single('image')
     var image = fs.createReadStream(path.join(__dirname, 'files', 'ffffff.png'))
@@ -119,7 +119,7 @@ describe('Multer S3', function () {
   it('uploads file with AWS KMS-managed server-side encryption', function (done) {
     var s3 = mockS3()
     var form = new FormData()
-    var storage = multerS3({ s3: s3, bucket: 'test', sse: 'aws:kms' })
+    var storage = multerS3({ s3: s3, bucket: 'test', serverSideEncryption: 'aws:kms' })
     var upload = multer({ storage: storage })
     var parser = upload.single('image')
     var image = fs.createReadStream(path.join(__dirname, 'files', 'ffffff.png'))
