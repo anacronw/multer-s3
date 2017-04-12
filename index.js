@@ -16,6 +16,8 @@ var defaultMetadata = staticValue(null)
 var defaultCacheControl = staticValue(null)
 var defaultContentDisposition = staticValue(null)
 var defaultStorageClass = staticValue('STANDARD')
+var defaultSSE = staticValue(null)
+var defaultSSEKMS = staticValue(null)
 
 function defaultKey (req, file, cb) {
   crypto.randomBytes(16, function (err, raw) {
@@ -44,7 +46,9 @@ function collect (storage, req, file, cb) {
     storage.getMetadata.bind(storage, req, file),
     storage.getCacheControl.bind(storage, req, file),
     storage.getContentDisposition.bind(storage, req, file),
-    storage.getStorageClass.bind(storage, req, file)
+    storage.getStorageClass.bind(storage, req, file),
+    storage.getSSE.bind(storage, req, file),
+    storage.getSSEKMS.bind(storage, req, file)
   ], function (err, values) {
     if (err) return cb(err)
 
@@ -60,7 +64,9 @@ function collect (storage, req, file, cb) {
         contentDisposition: values[5],
         storageClass: values[6],
         contentType: contentType,
-        replacementStream: replacementStream
+        replacementStream: replacementStream,
+        serverSideEncryption: values[7],
+        sseKmsKeyId: values[8]
       })
     })
   })
@@ -124,6 +130,20 @@ function S3Storage (opts) {
     case 'undefined': this.getStorageClass = defaultStorageClass; break
     default: throw new TypeError('Expected opts.storageClass to be undefined, string or function')
   }
+
+  switch (typeof opts.serverSideEncryption) {
+    case 'function': this.getSSE = opts.serverSideEncryption; break
+    case 'string': this.getSSE = staticValue(opts.serverSideEncryption); break
+    case 'undefined': this.getSSE = defaultSSE; break
+    default: throw new TypeError('Expected opts.serverSideEncryption to be undefined, string or function')
+  }
+
+  switch (typeof opts.sseKmsKeyId) {
+    case 'function': this.getSSEKMS = opts.sseKmsKeyId; break
+    case 'string': this.getSSEKMS = staticValue(opts.sseKmsKeyId); break
+    case 'undefined': this.getSSEKMS = defaultSSEKMS; break
+    default: throw new TypeError('Expected opts.sseKmsKeyId to be undefined, string, or function')
+  }
 }
 
 S3Storage.prototype._handleFile = function (req, file, cb) {
@@ -140,6 +160,8 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
       ContentType: opts.contentType,
       Metadata: opts.metadata,
       StorageClass: opts.storageClass,
+      ServerSideEncryption: opts.serverSideEncryption,
+      SSEKMSKeyId: opts.sseKmsKeyId,
       Body: (opts.replacementStream || file.stream)
     }
 
@@ -164,6 +186,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
         contentType: opts.contentType,
         contentDisposition: opts.contentDisposition,
         storageClass: opts.storageClass,
+        serverSideEncryption: opts.serverSideEncryption,
         metadata: opts.metadata,
         location: result.Location,
         etag: result.ETag

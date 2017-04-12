@@ -178,6 +178,29 @@ var upload = multer({
 })
 ```
 
+## Using Server-Side Encryption
+
+*An overview of S3's server-side encryption can be found in the [S3 Docs] (http://docs.aws.amazon.com/AmazonS3/latest/dev/serv-side-encryption.html); be advised that customer-managed keys (SSE-C) is not implemented at this time.*
+
+You may use the S3 server-side encryption functionality via the optional `serverSideEncryption` and `sseKmsKeyId` parameters. Full documentation of these parameters in relation to the S3 API can be found [here] (http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#upload-property) and [here] (http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingServerSideEncryption.html). 
+
+`serverSideEncryption` has two valid values: 'AES256' and 'aws:kms'. 'AES256' utilizes the S3-managed key system, while 'aws:kms' utilizes the AWS KMS system and accepts the optional `sseKmsKeyId` parameter to specify the key ID of the key you wish to use. Leaving `sseKmsKeyId` blank when 'aws:kms' is specified will use the default KMS key. **Note:** *You must instantiate the S3 instance with `signatureVersion: 'v4'` in order to use KMS-managed keys [[Docs]] (http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingAWSSDK.html#specify-signature-version), and the specified key must be in the same AWS region as the S3 bucket used.*
+
+```javascript
+var upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: 'some-bucket',
+    acl: 'authenticated-read',
+    contentDisposition: 'attachment',
+    serverSideEncryption: 'AES256',
+    key: function(req, file, cb) {
+      cb(null, Date.now().toString())
+    }
+  })
+})
+```
+
 ## Testing
 
 The tests mock all access to S3 and can be run completely offline.
