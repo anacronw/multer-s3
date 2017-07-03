@@ -163,7 +163,7 @@ describe('Multer S3', function () {
       assert.equal(req.file.fieldname, 'image')
       assert.equal(req.file.contentType, 'image/png')
       assert.equal(req.file.originalname, 'ffffff.png')
-      assert.equal(req.file.size, 100)
+      assert.equal(req.file.size, 68)
       assert.equal(req.file.bucket, 'test')
       assert.equal(req.file.etag, 'mock-etag')
       assert.equal(req.file.location, 'mock-location')
