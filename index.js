@@ -1,6 +1,5 @@
 var crypto = require('crypto')
 var stream = require('stream')
-var fileType = require('file-type')
 var parallel = require('run-parallel')
 
 function staticValue (value) {
@@ -27,14 +26,12 @@ function defaultKey (req, file, cb) {
 
 function autoContentType (req, file, cb) {
   file.stream.once('data', function (firstChunk) {
-    var type = fileType(firstChunk)
-    var mime = (type === null ? 'application/octet-stream' : type.mime)
     var outStream = new stream.PassThrough()
 
     outStream.write(firstChunk)
     file.stream.pipe(outStream)
 
-    cb(null, mime, outStream)
+    cb(null, file.mimetype, outStream)
   })
 }
 
