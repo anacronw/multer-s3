@@ -29,12 +29,14 @@ function defaultKey (req, file, cb) {
 function autoContentType (req, file, cb) {
   file.stream.once('data', function (firstChunk) {
     var type = fileType(firstChunk)
-    var mime = 'application/octet-stream'
+    var mime
 
-    if (type === null && isSvg(firstChunk)) {
+    if (type) {
+      mime = type.mime
+    } else if (isSvg(firstChunk)) {
       mime = 'image/svg+xml'
     } else {
-      mime = type.mime
+      mime = 'application/octet-stream'
     }
 
     var outStream = new stream.PassThrough()
