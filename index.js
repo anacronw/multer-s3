@@ -39,12 +39,10 @@ function autoContentType (req, file, cb) {
 }
 
 function collect (storage, req, file, cb) {
-
   storage.getContentType(req, file, function (err, contentType, replacementStream) {
     if (err) return cb(err)
 
-
-    file.calculatedMime = contentType;
+    file.calculatedMime = contentType
     parallel([
       storage.getBucket.bind(storage, req, file),
       storage.getKey.bind(storage, req, file),
@@ -70,9 +68,9 @@ function collect (storage, req, file, cb) {
         replacementStream: replacementStream,
         serverSideEncryption: values[7],
         sseKmsKeyId: values[8]
-      });
-    });
-  });
+      })
+    })
+  })
 }
 
 function S3Storage (opts) {
