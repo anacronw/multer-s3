@@ -71,7 +71,6 @@ function collect (storage, req, file, cb) {
         serverSideEncryption: values[7],
         sseKmsKeyId: values[8]
       });
-
     });
   });
 }
