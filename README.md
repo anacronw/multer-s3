@@ -56,6 +56,28 @@ Key | Description | Note
 `contentDisposition` | The `contentDisposition` used to upload the file | `S3Storage`
 `storageClass` | The `storageClass` to be used for the uploaded file in S3 | `S3Storage`
 
+### Setting OPTIONS
+[OPTIONS values](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3/ManagedUpload.html#constructor-propert) can be set by passing an optional `options` parameter into the `multerS3` object.
+```javascript
+var upload = multer({
+  storage: multerS3({
+    s3: s3,
+    options:{partSize: 10 * 1024 * 1024, queueSize: 1},
+    bucket: 'some-bucket',
+    key: function (req, file, cb) {
+      cb(null, Date.now().toString())
+    }
+  })
+})
+```
+Available options:
+
+* queueSize (Number) — default: 4 — the size of the concurrent queue manager to upload parts in parallel. Set to 1 for synchronous uploading of parts. Note that the uploader will buffer at most queueSize * partSize bytes into memory at any given time.
+* partSize (Number) — default: 5mb — the size in bytes for each individual part to be uploaded. Adjust the part size to ensure the number of parts does not exceed maxTotalParts. See minPartSize for the minimum allowed part size.
+* leavePartsOnError (Boolean) — default: false — whether to abort the multipart upload if an error occurs. Set to true if you want to handle failures manually.
+service (AWS.S3) — an optional S3 service object to use for requests. This object might have bound parameters used by the uploader.
+* tags (Array<map>) — The tags to apply to the uploaded object. Each tag should have a Key and Value keys.
+
 ### Setting ACL
 
 [ACL values](http://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) can be set by passing an optional `acl` parameter into the `multerS3` object.
@@ -90,7 +112,7 @@ ACL Option | Permissions added to ACL
 
 The `metadata` option is a callback that accepts the request and file, and returns a metadata object to be saved to S3.
 
-Here is an example that stores all fields in the request body as metadata, and uses an `id` param as the key: 
+Here is an example that stores all fields in the request body as metadata, and uses an `id` param as the key:
 
 ```javascript
 var opts = {
@@ -182,7 +204,7 @@ var upload = multer({
 
 *An overview of S3's server-side encryption can be found in the [S3 Docs] (http://docs.aws.amazon.com/AmazonS3/latest/dev/serv-side-encryption.html); be advised that customer-managed keys (SSE-C) is not implemented at this time.*
 
-You may use the S3 server-side encryption functionality via the optional `serverSideEncryption` and `sseKmsKeyId` parameters. Full documentation of these parameters in relation to the S3 API can be found [here] (http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#upload-property) and [here] (http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingServerSideEncryption.html). 
+You may use the S3 server-side encryption functionality via the optional `serverSideEncryption` and `sseKmsKeyId` parameters. Full documentation of these parameters in relation to the S3 API can be found [here] (http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#upload-property) and [here] (http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingServerSideEncryption.html).
 
 `serverSideEncryption` has two valid values: 'AES256' and 'aws:kms'. 'AES256' utilizes the S3-managed key system, while 'aws:kms' utilizes the AWS KMS system and accepts the optional `sseKmsKeyId` parameter to specify the key ID of the key you wish to use. Leaving `sseKmsKeyId` blank when 'aws:kms' is specified will use the default KMS key. **Note:** *You must instantiate the S3 instance with `signatureVersion: 'v4'` in order to use KMS-managed keys [[Docs]] (http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingAWSSDK.html#specify-signature-version), and the specified key must be in the same AWS region as the S3 bucket used.*
 
