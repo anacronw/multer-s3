@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/badunk/multer-s3#readme",
   "dependencies": {
-    "file-type": "^3.3.0",
+    "file-type": "^7.2.0",
     "run-parallel": "^1.1.6"
   },
   "devDependencies": {
