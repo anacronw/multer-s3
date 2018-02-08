@@ -55,7 +55,7 @@ Key | Description | Note
 `etag` | The `etag`of the uploaded file in S3  | `S3Storage`
 `contentDisposition` | The `contentDisposition` used to upload the file | `S3Storage`
 `storageClass` | The `storageClass` to be used for the uploaded file in S3 | `S3Storage`
-`versionId` | The `versionId` is optional param that is returned by S3 for versioned buckets. | S3Storage  
+`versionId` | The `versionId` is an optional param returned by S3 for versioned buckets. | `S3Storage`
 
 ### Setting ACL
 
