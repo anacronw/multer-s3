@@ -1,14 +1,14 @@
 {
   "name": "multer-s3",
   "version": "2.8.0",
-  "description": "Streaming multer storage engine for AWS S3",
+  "description": "Kustomer fork of badunk/multer-s3 with newer file-type dependency",
   "main": "index.js",
   "scripts": {
     "test": "standard && mocha test/basic.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/badunk/multer-s3.git"
+    "url": "git+https://github.com/kustomer/multer-s3.git"
   },
   "keywords": [
     "multer",
@@ -16,14 +16,14 @@
     "amazon",
     "aws"
   ],
-  "author": "badunk",
+  "author": "kustomer",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/badunk/multer-s3/issues"
+    "url": "https://github.com/kustomer/multer-s3/issues"
   },
-  "homepage": "https://github.com/badunk/multer-s3#readme",
+  "homepage": "https://github.com/kustomer/multer-s3#readme",
   "dependencies": {
-    "file-type": "^3.3.0",
+    "file-type": "7.7.1",
     "run-parallel": "^1.1.6"
   },
   "devDependencies": {
@@ -34,7 +34,7 @@
     "mocha": "^2.2.5",
     "multer": "^1.1.0",
     "on-finished": "^2.3.0",
-    "standard": "^5.4.1",
+    "standard": "7.0.0",
     "xtend": "^4.0.1"
   }
 }
