@@ -11,6 +11,7 @@ var stream = require('stream')
 var FormData = require('form-data')
 var onFinished = require('on-finished')
 var mockS3 = require('./util/mock-s3')
+var sharp = require('sharp')
 
 var VALID_OPTIONS = {
   bucket: 'string'
@@ -80,6 +81,34 @@ describe('Multer S3', function () {
       assert.equal(req.file.fieldname, 'image')
       assert.equal(req.file.originalname, 'ffffff.png')
       assert.equal(req.file.size, 68)
+      assert.equal(req.file.bucket, 'test')
+      assert.equal(req.file.etag, 'mock-etag')
+      assert.equal(req.file.location, 'mock-location')
+
+      done()
+    })
+  })
+
+  it('upload files with transforms', function (done) {
+    var s3 = mockS3()
+    var form = new FormData()
+    const transformer = sharp().resize({ width: 100 });
+    var storage = multerS3({ s3: s3, bucket: 'test', transformer: transformer })
+    var upload = multer({ storage: storage })
+    var parser = upload.single('image')
+    var image = fs.createReadStream(path.join(__dirname, 'files', 'ffffff.png'))
+
+    form.append('name', 'Multer')
+    form.append('image', image)
+
+    submitForm(parser, form, function (err, req) {
+      assert.ifError(err)
+
+      assert.equal(req.body.name, 'Multer')
+
+      assert.equal(req.file.fieldname, 'image')
+      assert.equal(req.file.originalname, 'ffffff.png')
+      assert.notEqual(req.file.size, 0)
       assert.equal(req.file.bucket, 'test')
       assert.equal(req.file.etag, 'mock-etag')
       assert.equal(req.file.location, 'mock-location')

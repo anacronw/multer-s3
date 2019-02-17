@@ -3,6 +3,7 @@ var stream = require('stream')
 var fileType = require('file-type')
 var isSvg = require('is-svg')
 var parallel = require('run-parallel')
+const sharp = require('sharp')
 
 function staticValue (value) {
   return function (req, file, cb) {
@@ -154,6 +155,16 @@ function S3Storage (opts) {
     case 'undefined': this.getSSEKMS = defaultSSEKMS; break
     default: throw new TypeError('Expected opts.sseKmsKeyId to be undefined, string, or function')
   }
+
+  switch (typeof opts.transformer) {
+    case 'object': {
+      if (opts.transformer instanceof sharp) this.transformer = opts.transformer;
+      else throw new TypeError('Expected opts.transformer to be sharp object or undefined');
+      break;
+    }
+    case 'undefined': this.transformer = undefined; break
+    default: throw new TypeError('Expected opts.transformer to be sharp object or undefined')
+  }
 }
 
 S3Storage.prototype._handleFile = function (req, file, cb) {
@@ -172,7 +183,9 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
       StorageClass: opts.storageClass,
       ServerSideEncryption: opts.serverSideEncryption,
       SSEKMSKeyId: opts.sseKmsKeyId,
-      Body: (opts.replacementStream || file.stream)
+      Body: this.transformer ?
+        (opts.replacementStream || file.stream).pipe(this.transformer) :
+        (opts.replacementStream || file.stream)
     }
 
     if (opts.contentDisposition) {
