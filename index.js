@@ -1,7 +1,6 @@
 var crypto = require('crypto')
 var stream = require('stream')
 var fileType = require('file-type')
-var isSvg = require('is-svg')
 var parallel = require('run-parallel')
 
 function staticValue (value) {
@@ -20,6 +19,8 @@ var defaultStorageClass = staticValue('STANDARD')
 var defaultSSE = staticValue(null)
 var defaultSSEKMS = staticValue(null)
 
+var svgRegex = /^\s*(?:<\?xml[^>]*>\s*)?(?:<!doctype svg[^>]*\s*(?:\[?(?:\s*<![^>]*>\s*)*\]?)*[^>]*>\s*)?<svg[^>]*>/i
+
 function defaultKey (req, file, cb) {
   crypto.randomBytes(16, function (err, raw) {
     cb(err, err ? undefined : raw.toString('hex'))
@@ -30,10 +31,11 @@ function autoContentType (req, file, cb) {
   file.stream.once('data', function (firstChunk) {
     var type = fileType(firstChunk)
     var mime
+    var svgMatches = firstChunk.toString().match(svgRegex) || []
 
     if (type) {
       mime = type.mime
-    } else if (isSvg(firstChunk)) {
+    } else if (svgMatches.length > 0) {
       mime = 'image/svg+xml'
     } else {
       mime = 'application/octet-stream'
