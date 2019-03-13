@@ -31,11 +31,11 @@ function autoContentType (req, file, cb) {
   file.stream.once('data', function (firstChunk) {
     var type = fileType(firstChunk)
     var mime
-    var svgMatches = firstChunk.toString().match(svgRegex) || []
+    var isSvg = svgRegex.test(firstChunk.toString())
 
     if (type) {
       mime = type.mime
-    } else if (svgMatches.length > 0) {
+    } else if (isSvg) {
       mime = 'image/svg+xml'
     } else {
       mime = 'application/octet-stream'
