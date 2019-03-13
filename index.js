@@ -1,7 +1,4 @@
 var crypto = require('crypto')
-var stream = require('stream')
-var fileType = require('file-type')
-var isSvg = require('is-svg')
 var parallel = require('run-parallel')
 
 function staticValue (value) {
@@ -27,25 +24,7 @@ function defaultKey (req, file, cb) {
 }
 
 function autoContentType (req, file, cb) {
-  file.stream.once('data', function (firstChunk) {
-    var type = fileType(firstChunk)
-    var mime
-
-    if (type) {
-      mime = type.mime
-    } else if (isSvg(firstChunk)) {
-      mime = 'image/svg+xml'
-    } else {
-      mime = 'application/octet-stream'
-    }
-
-    var outStream = new stream.PassThrough()
-
-    outStream.write(firstChunk)
-    file.stream.pipe(outStream)
-
-    cb(null, mime, outStream)
-  })
+  cb(null, file.mimetype, null)
 }
 
 function collect (storage, req, file, cb) {
