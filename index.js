@@ -27,13 +27,18 @@ function defaultKey (req, file, cb) {
 }
 
 function autoContentType (req, file, cb) {
-  file.stream.once('data', function (firstChunk) {
-    var type = fileType(firstChunk)
+  var data = ''
+  file.stream.on('data', function(chunk) {
+    data += chunk.toString();
+  })
+  
+  file.stream.once('end', function () {
+    var type = fileType(data)
     var mime
 
     if (type) {
       mime = type.mime
-    } else if (isSvg(firstChunk)) {
+    } else if (isSvg(data)) {
       mime = 'image/svg+xml'
     } else {
       mime = 'application/octet-stream'
@@ -41,7 +46,7 @@ function autoContentType (req, file, cb) {
 
     var outStream = new stream.PassThrough()
 
-    outStream.write(firstChunk)
+    outStream.write(data)
     file.stream.pipe(outStream)
 
     cb(null, mime, outStream)
