@@ -27,12 +27,14 @@ function defaultKey (req, file, cb) {
 }
 
 function autoContentType (req, file, cb) {
-  var data = ''
+  var buffer = []
+  
   file.stream.on('data', function(chunk) {
-    data += chunk.toString();
+    buffer.push(chunk)
   })
   
   file.stream.once('end', function () {
+    var data = Buffer.concat(buffer)
     var type = fileType(data)
     var mime
 
