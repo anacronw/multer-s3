@@ -17,6 +17,7 @@ var defaultMetadata = staticValue(null)
 var defaultCacheControl = staticValue(null)
 var defaultContentDisposition = staticValue(null)
 var defaultContentEncoding = staticValue(null)
+var defaultTagging = staticValue(null)
 var defaultStorageClass = staticValue('STANDARD')
 var defaultSSE = staticValue(null)
 var defaultSSEKMS = staticValue(null)
@@ -60,7 +61,8 @@ function collect (storage, req, file, cb) {
     storage.getStorageClass.bind(storage, req, file),
     storage.getSSE.bind(storage, req, file),
     storage.getSSEKMS.bind(storage, req, file),
-    storage.getContentEncoding.bind(storage, req, file)
+    storage.getContentEncoding.bind(storage, req, file),
+    storage.getTagging.bind(storage, req, file)
   ], function (err, values) {
     if (err) return cb(err)
 
@@ -79,7 +81,8 @@ function collect (storage, req, file, cb) {
         replacementStream: replacementStream,
         serverSideEncryption: values[7],
         sseKmsKeyId: values[8],
-        contentEncoding: values[9]
+        contentEncoding: values[9],
+        tagging: values[10]
       })
     })
   })
@@ -143,6 +146,13 @@ function S3Storage (opts) {
     case 'undefined': this.getContentEncoding = defaultContentEncoding; break
     default: throw new TypeError('Expected opts.contentEncoding to be undefined, string or function')
   }
+  
+  switch (typeof opts.tagging) {
+    case 'function': this.getTagging = opts.tagging; break
+    case 'string': this.getTagging = staticValue(opts.tagging); break
+    case 'undefined': this.getTagging = defaultTagging; break
+    default: throw new TypeError('Expected opts.tagging to be undefined, string or function')
+  }
 
   switch (typeof opts.storageClass) {
     case 'function': this.getStorageClass = opts.storageClass; break
@@ -192,6 +202,10 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
     if (opts.contentEncoding) {
       params.ContentEncoding = opts.contentEncoding
     }
+    
+    if (opts.tagging) {
+      params.Tagging = opts.tagging
+    }
 
     var upload = this.s3.upload(params)
 
@@ -210,6 +224,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
         contentType: opts.contentType,
         contentDisposition: opts.contentDisposition,
         contentEncoding: opts.contentEncoding,
+        tagging: opts.tagging,
         storageClass: opts.storageClass,        
         serverSideEncryption: opts.serverSideEncryption,
         metadata: opts.metadata,
