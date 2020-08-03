@@ -28,20 +28,24 @@ function defaultKey (req, file, cb) {
 
 function autoContentType (req, file, cb) {
   var buffer = []
-  
-  file.stream.on('data', function(chunk) {
+
+  file.stream.on('data', function (chunk) {
     buffer.push(chunk)
   })
-  
+
+  /**
+   *  While `fileType` only requires the first chunk of the file stream,
+   * `isSvg` requires the entire file to be read, so we must use the `end` event rather than `data`
+   */
   file.stream.once('end', function () {
     var data = Buffer.concat(buffer)
     var type = fileType(data)
     var mime
 
-    if (type) {
-      mime = type.mime
-    } else if (isSvg(data)) {
+    if (isSvg(data)) {
       mime = 'image/svg+xml'
+    } else if (type) {
+      mime = type.mime
     } else {
       mime = 'application/octet-stream'
     }
