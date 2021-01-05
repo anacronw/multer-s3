@@ -1,6 +1,6 @@
 {
   "name": "@kustomer/multer-s3",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Kustomer fork of badunk/multer-s3 with newer file-type dependency",
   "main": "index.js",
   "scripts": {
@@ -31,7 +31,7 @@
     "concat-stream": "^1.5.1",
     "express": "^4.13.1",
     "form-data": "^1.0.0-rc3",
-    "mocha": "^2.2.5",
+    "mocha": "^8.2.1",
     "multer": "^1.1.0",
     "on-finished": "^2.3.0",
     "standard": "7.0.0",
