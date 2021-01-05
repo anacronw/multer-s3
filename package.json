@@ -1,6 +1,6 @@
 {
   "name": "@kustomer/multer-s3",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Kustomer fork of badunk/multer-s3 with newer file-type dependency",
   "main": "index.js",
   "scripts": {
