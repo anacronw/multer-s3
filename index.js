@@ -1,7 +1,7 @@
 var crypto = require('crypto')
 var stream = require('stream')
 var fileType = require('file-type')
-var isSvg = require('is-svg')
+var htmlCommentRegex = require('html-comment-regex')
 var parallel = require('run-parallel')
 
 function staticValue (value) {
@@ -20,6 +20,21 @@ var defaultStorageClass = staticValue('STANDARD')
 var defaultSSE = staticValue(null)
 var defaultSSEKMS = staticValue(null)
 
+// Regular expression to detect svg file content, inspired by: https://github.com/sindresorhus/is-svg/blob/master/index.js
+// It is not always possible to check for an end tag if a file is very big. The firstChunk, see below, might not be the entire file.
+var svgRegex = /^\s*(?:<\?xml[^>]*>\s*)?(?:<!doctype svg[^>]*>\s*)?<svg[^>]*>/i
+
+function isSvg (svg) {
+  // Remove DTD entities
+  svg = svg.replace(/\s*<!Entity\s+\S*\s*(?:"|')[^"]+(?:"|')\s*>/img, '')
+  // Remove DTD markup declarations
+  svg = svg.replace(/\[?(?:\s*<![A-Z]+[^>]*>\s*)*\]?/g, '')
+  // Remove HTML comments
+  svg = svg.replace(htmlCommentRegex, '')
+
+  return svgRegex.test(svg)
+}
+
 function defaultKey (req, file, cb) {
   crypto.randomBytes(16, function (err, raw) {
     cb(err, err ? undefined : raw.toString('hex'))
@@ -29,14 +44,13 @@ function defaultKey (req, file, cb) {
 function autoContentType (req, file, cb) {
   file.stream.once('data', function (firstChunk) {
     var type = fileType(firstChunk)
-    var mime
+    var mime = 'application/octet-stream' // default type
 
-    if (type) {
-      mime = type.mime
-    } else if (isSvg(firstChunk)) {
+    // Make sure to check xml-extension for svg files.
+    if ((!type || type.ext === 'xml') && isSvg(firstChunk.toString())) {
       mime = 'image/svg+xml'
-    } else {
-      mime = 'application/octet-stream'
+    } else if (type) {
+      mime = type.mime
     }
 
     var outStream = new stream.PassThrough()

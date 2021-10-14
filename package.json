@@ -24,7 +24,7 @@
   "homepage": "https://github.com/badunk/multer-s3#readme",
   "dependencies": {
     "file-type": "^3.3.0",
-    "is-svg": "^2.1.0",
+    "html-comment-regex": "^1.1.2",
     "run-parallel": "^1.1.6"
   },
   "devDependencies": {

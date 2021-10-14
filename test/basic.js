@@ -173,7 +173,7 @@ describe('Multer S3', function () {
     })
   })
 
-  it('uploads SVG file with correct content-type', function (done) {
+  it('uploads pure SVG file with correct content-type', function (done) {
     var s3 = mockS3()
     var form = new FormData()
     var storage = multerS3({ s3: s3, bucket: 'test', serverSideEncryption: 'aws:kms', contentType: multerS3.AUTO_CONTENT_TYPE })
@@ -193,6 +193,67 @@ describe('Multer S3', function () {
       assert.equal(req.file.contentType, 'image/svg+xml')
       assert.equal(req.file.originalname, 'test.svg')
       assert.equal(req.file.size, 100)
+      assert.equal(req.file.bucket, 'test')
+      assert.equal(req.file.etag, 'mock-etag')
+      assert.equal(req.file.location, 'mock-location')
+      assert.equal(req.file.serverSideEncryption, 'aws:kms')
+
+      done()
+    })
+  })
+
+  it('uploads common SVG file with correct content-type', function (done) {
+    var s3 = mockS3()
+    var form = new FormData()
+    var storage = multerS3({ s3: s3, bucket: 'test', serverSideEncryption: 'aws:kms', contentType: multerS3.AUTO_CONTENT_TYPE })
+    var upload = multer({ storage: storage })
+    var parser = upload.single('image')
+    var image = fs.createReadStream(path.join(__dirname, 'files', 'test2.svg'))
+
+    form.append('name', 'Multer')
+    form.append('image', image)
+
+    submitForm(parser, form, function (err, req) {
+      assert.ifError(err)
+
+      assert.equal(req.body.name, 'Multer')
+
+      assert.equal(req.file.fieldname, 'image')
+      assert.equal(req.file.contentType, 'image/svg+xml')
+      assert.equal(req.file.originalname, 'test2.svg')
+      assert.equal(req.file.size, 285)
+      assert.equal(req.file.bucket, 'test')
+      assert.equal(req.file.etag, 'mock-etag')
+      assert.equal(req.file.location, 'mock-location')
+      assert.equal(req.file.serverSideEncryption, 'aws:kms')
+
+      done()
+    })
+  })
+
+  it('uploads SVG file without quadratic regex', function (done) {
+    this.timeout('10s')
+
+    var s3 = mockS3()
+    var form = new FormData()
+    var storage = multerS3({ s3: s3, bucket: 'test', serverSideEncryption: 'aws:kms', contentType: multerS3.AUTO_CONTENT_TYPE })
+    var upload = multer({ storage: storage })
+    var parser = upload.single('image')
+    fs.writeFileSync(path.join(__dirname, 'files', 'test_generated.svg'), '<!doctype svg ' + ' '.repeat(34560))
+    var image = fs.createReadStream(path.join(__dirname, 'files', 'test_generated.svg'))
+
+    form.append('name', 'Multer')
+    form.append('image', image)
+
+    submitForm(parser, form, function (err, req) {
+      assert.ifError(err)
+
+      assert.equal(req.body.name, 'Multer')
+
+      assert.equal(req.file.fieldname, 'image')
+      assert.equal(req.file.contentType, 'application/octet-stream')
+      assert.equal(req.file.originalname, 'test_generated.svg')
+      assert.equal(req.file.size, 34574)
       assert.equal(req.file.bucket, 'test')
       assert.equal(req.file.etag, 'mock-etag')
       assert.equal(req.file.location, 'mock-location')
