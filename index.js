@@ -22,7 +22,18 @@ var defaultSSEKMS = staticValue(null)
 
 // Regular expression to detect svg file content, inspired by: https://github.com/sindresorhus/is-svg/blob/master/index.js
 // It is not always possible to check for an end tag if a file is very big. The firstChunk, see below, might not be the entire file.
-var svgRegex = /^\s*(?:<\?xml[^>]*>\s*)?(?:<!doctype svg[^>]*\s*(?:\[?(?:\s*<![^>]*>\s*)*\]?)*[^>]*>\s*)?<svg[^>]*>/i
+var svgRegex = /^\s*(?:<\?xml[^>]*>\s*)?(?:<!doctype svg[^>]*>\s*)?<svg[^>]*>/i
+
+function isSvg (svg) {
+  // Remove DTD entities
+  svg = svg.replace(/\s*<!Entity\s+\S*\s*(?:"|')[^"]+(?:"|')\s*>/img, '')
+  // Remove DTD markup declarations
+  svg = svg.replace(/\[?(?:\s*<![A-Z]+[^>]*>\s*)*\]?/g, '')
+  // Remove HTML comments
+  svg = svg.replace(htmlCommentRegex, '')
+
+  return svgRegex.test(svg)
+}
 
 function defaultKey (req, file, cb) {
   crypto.randomBytes(16, function (err, raw) {
@@ -36,7 +47,7 @@ function autoContentType (req, file, cb) {
     var mime = 'application/octet-stream' // default type
 
     // Make sure to check xml-extension for svg files.
-    if ((!type || type.ext === 'xml') && svgRegex.test(firstChunk.toString().replace(htmlCommentRegex, ''))) {
+    if ((!type || type.ext === 'xml') && isSvg(firstChunk.toString())) {
       mime = 'image/svg+xml'
     } else if (type) {
       mime = type.mime
