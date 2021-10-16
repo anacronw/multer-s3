@@ -56,6 +56,7 @@ Key | Description | Note
 `contentDisposition` | The `contentDisposition` used to upload the file | `S3Storage`
 `storageClass` | The `storageClass` to be used for the uploaded file in S3 | `S3Storage`
 `versionId` | The `versionId` is an optional param returned by S3 for versioned buckets. | `S3Storage`
+`contentEncoding` | The `contentEncoding` used to upload the file | `S3Storage`
 
 ### Setting ACL
 
@@ -201,6 +202,25 @@ var upload = multer({
   })
 })
 ```
+
+## Setting Content-Encoding
+
+The optional `contentEncoding` option can be used to set the `Content-Encoding` header for the uploaded file. By default, the `contentEncoding` isn't forwarded. As an example below, using the value `gzip`, a file can be uploaded as a gzip file - and when it is downloaded, the browser will uncompress it automatically.
+
+```javascript
+var upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: 'some-bucket',
+    acl: 'public-read',
+    contentEncoding: 'gzip',
+    key: function (req, file, cb) {
+      cb(null, Date.now().toString())
+    }
+  })
+})
+```
+You may also use a function as the `contentEncoding`, which should be of the form `function(req, file, cb)`.
 
 ## Testing
 
