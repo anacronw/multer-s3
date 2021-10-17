@@ -16,6 +16,7 @@ var defaultContentType = staticValue('application/octet-stream')
 var defaultMetadata = staticValue(null)
 var defaultCacheControl = staticValue(null)
 var defaultContentDisposition = staticValue(null)
+var defaultContentEncoding = staticValue(null)
 var defaultStorageClass = staticValue('STANDARD')
 var defaultSSE = staticValue(null)
 var defaultSSEKMS = staticValue(null)
@@ -72,7 +73,8 @@ function collect (storage, req, file, cb) {
     storage.getContentDisposition.bind(storage, req, file),
     storage.getStorageClass.bind(storage, req, file),
     storage.getSSE.bind(storage, req, file),
-    storage.getSSEKMS.bind(storage, req, file)
+    storage.getSSEKMS.bind(storage, req, file),
+    storage.getContentEncoding.bind(storage, req, file)
   ], function (err, values) {
     if (err) return cb(err)
 
@@ -90,7 +92,8 @@ function collect (storage, req, file, cb) {
         contentType: contentType,
         replacementStream: replacementStream,
         serverSideEncryption: values[7],
-        sseKmsKeyId: values[8]
+        sseKmsKeyId: values[8],
+        contentEncoding: values[9]
       })
     })
   })
@@ -148,6 +151,13 @@ function S3Storage (opts) {
     default: throw new TypeError('Expected opts.contentDisposition to be undefined, string or function')
   }
 
+  switch (typeof opts.contentEncoding) {
+    case 'function': this.getContentEncoding = opts.contentEncoding; break
+    case 'string': this.getContentEncoding = staticValue(opts.contentEncoding); break
+    case 'undefined': this.getContentEncoding = defaultContentEncoding; break
+    default: throw new TypeError('Expected opts.contentEncoding to be undefined, string or function')
+  }
+
   switch (typeof opts.storageClass) {
     case 'function': this.getStorageClass = opts.storageClass; break
     case 'string': this.getStorageClass = staticValue(opts.storageClass); break
@@ -193,6 +203,10 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
       params.ContentDisposition = opts.contentDisposition
     }
 
+    if (opts.contentEncoding) {
+      params.ContentEncoding = opts.contentEncoding
+    }
+
     var upload = this.s3.upload(params)
 
     upload.on('httpUploadProgress', function (ev) {
@@ -209,6 +223,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
         acl: opts.acl,
         contentType: opts.contentType,
         contentDisposition: opts.contentDisposition,
+        contentEncoding: opts.contentEncoding,
         storageClass: opts.storageClass,
         serverSideEncryption: opts.serverSideEncryption,
         metadata: opts.metadata,

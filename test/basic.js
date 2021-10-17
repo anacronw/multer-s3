@@ -262,4 +262,32 @@ describe('Multer S3', function () {
       done()
     })
   })
+
+  it('uploads common file as gzip content encoded', function (done) {
+    var s3 = mockS3()
+    var form = new FormData()
+    var storage = multerS3({ s3: s3, bucket: 'test', serverSideEncryption: 'aws:kms', contentType: multerS3.AUTO_CONTENT_TYPE, contentEncoding: 'gzip' })
+    var upload = multer({ storage: storage })
+    var parser = upload.single('file')
+    var image = fs.createReadStream(path.join(__dirname, 'files', 'a.txt'))
+
+    form.append('name', 'Multer')
+    form.append('file', image)
+
+    submitForm(parser, form, function (err, req) {
+      assert.ifError(err)
+
+      assert.equal(req.body.name, 'Multer')
+      assert.equal(req.file.fieldname, 'file')
+      assert.equal(req.file.contentType, 'application/octet-stream')
+      assert.equal(req.file.originalname, 'a.txt')
+      assert.equal(req.file.size, 7)
+      assert.equal(req.file.bucket, 'test')
+      assert.equal(req.file.etag, 'mock-etag')
+      assert.equal(req.file.location, 'mock-location')
+      assert.equal(req.file.serverSideEncryption, 'aws:kms')
+      assert.equal(req.file.contentEncoding, 'gzip')
+      done()
+    })
+  })
 })
