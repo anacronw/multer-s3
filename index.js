@@ -1,9 +1,8 @@
 var crypto = require('crypto')
-var htmlCommentRegex = require('html-comment-regex')
 var parallel = require('run-parallel')
-var Upload = require("@aws-sdk/lib-storage").Upload;
+var Upload = require('@aws-sdk/lib-storage').Upload
 
-function staticValue(value) {
+function staticValue (value) {
   return function (req, file, cb) {
     cb(null, value)
   }
@@ -20,32 +19,17 @@ var defaultStorageClass = staticValue('STANDARD')
 var defaultSSE = staticValue(null)
 var defaultSSEKMS = staticValue(null)
 
-// Regular expression to detect svg file content, inspired by: https://github.com/sindresorhus/is-svg/blob/master/index.js
-// It is not always possible to check for an end tag if a file is very big. The firstChunk, see below, might not be the entire file.
-var svgRegex = /^\s*(?:<\?xml[^>]*>\s*)?(?:<!doctype svg[^>]*>\s*)?<svg[^>]*>/i
-
-function isSvg(svg) {
-  // Remove DTD entities
-  svg = svg.replace(/\s*<!Entity\s+\S*\s*(?:"|')[^"]+(?:"|')\s*>/img, '')
-  // Remove DTD markup declarations
-  svg = svg.replace(/\[?(?:\s*<![A-Z]+[^>]*>\s*)*\]?/g, '')
-  // Remove HTML comments
-  svg = svg.replace(htmlCommentRegex, '')
-
-  return svgRegex.test(svg)
-}
-
-function defaultKey(req, file, cb) {
+function defaultKey (req, file, cb) {
   crypto.randomBytes(16, function (err, raw) {
     cb(err, err ? undefined : raw.toString('hex'))
   })
 }
 
-function autoContentType(req, file, cb) {
+function autoContentType (req, file, cb) {
   cb(null, file.mimetype || 'application/octet-stream')
 }
 
-function collect(storage, req, file, cb) {
+function collect (storage, req, file, cb) {
   parallel([
     storage.getBucket.bind(storage, req, file),
     storage.getKey.bind(storage, req, file),
@@ -81,7 +65,7 @@ function collect(storage, req, file, cb) {
   })
 }
 
-function S3Storage(opts) {
+function S3Storage (opts) {
   switch (typeof opts.s3) {
     case 'object': this.s3 = opts.s3; break
     default: throw new TypeError('Expected opts.s3 to be object')
@@ -191,8 +175,8 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
 
     var upload = new Upload({
       client: this.s3,
-      params: params,
-    });
+      params: params
+    })
 
     upload.on('httpUploadProgress', function (ev) {
       if (ev.total) currentSize = ev.total
