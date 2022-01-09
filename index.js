@@ -1,9 +1,7 @@
 var crypto = require('crypto')
-var stream = require('stream')
-var fileType = require('file-type')
 var htmlCommentRegex = require('html-comment-regex')
 var parallel = require('run-parallel')
-var PutObjectCommand = require("@aws-sdk/client-s3").PutObjectCommand;
+var Upload = require("@aws-sdk/lib-storage").Upload;
 
 function staticValue(value) {
   return function (req, file, cb) {
@@ -44,24 +42,7 @@ function defaultKey(req, file, cb) {
 }
 
 function autoContentType(req, file, cb) {
-  file.stream.once('data', function (firstChunk) {
-    var type = fileType(firstChunk)
-    var mime = 'application/octet-stream' // default type
-
-    // Make sure to check xml-extension for svg files.
-    if ((!type || type.ext === 'xml') && isSvg(firstChunk.toString())) {
-      mime = 'image/svg+xml'
-    } else if (type) {
-      mime = type.mime
-    }
-
-    var outStream = new stream.PassThrough()
-
-    outStream.write(firstChunk)
-    file.stream.pipe(outStream)
-
-    cb(null, mime, outStream)
-  })
+  cb(null, file.mimetype || 'application/octet-stream')
 }
 
 function streamToBuffer(req, file, cb) {
@@ -91,6 +72,8 @@ function collect(storage, req, file, cb) {
       if (err) return cb(err)
 
       streamToBuffer(req, file, function (err, buffer, stream) {
+        if (err) return cb(err)
+
         cb.call(storage, null, {
           bucket: values[0],
           key: values[1],
@@ -219,32 +202,36 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
       params.ContentEncoding = opts.contentEncoding
     }
 
-    var uploadCommand = new PutObjectCommand(params)
+    var upload = new Upload({
+      client: this.s3,
+      params: params,
+    });
 
-    // TODO Upload progress for AWS SDK V3
-    // upload.on('httpUploadProgress', function (ev) {
-    //   if (ev.total) currentSize = ev.total
-    // })
-
-    this.s3.send(uploadCommand, function (err, result) {
-      if (err) return cb(err)
-
-      cb(null, {
-        size: currentSize,
-        bucket: opts.bucket,
-        key: opts.key,
-        acl: opts.acl,
-        contentType: opts.contentType,
-        contentDisposition: opts.contentDisposition,
-        contentEncoding: opts.contentEncoding,
-        storageClass: opts.storageClass,
-        serverSideEncryption: opts.serverSideEncryption,
-        metadata: opts.metadata,
-        location: result.Location,
-        etag: result.ETag,
-        versionId: result.VersionId
-      })
+    upload.on('httpUploadProgress', function (ev) {
+      if (ev.total) currentSize = ev.total
     })
+
+    upload.done()
+      .then(function (result) {
+        cb(null, {
+          size: currentSize,
+          bucket: opts.bucket,
+          key: opts.key,
+          acl: opts.acl,
+          contentType: opts.contentType,
+          contentDisposition: opts.contentDisposition,
+          contentEncoding: opts.contentEncoding,
+          storageClass: opts.storageClass,
+          serverSideEncryption: opts.serverSideEncryption,
+          metadata: opts.metadata,
+          location: result.Location,
+          etag: result.ETag,
+          versionId: result.VersionId
+        })
+      })
+      .catch(function (err) {
+        cb(err)
+      })
   })
 }
 
