@@ -45,14 +45,6 @@ function autoContentType(req, file, cb) {
   cb(null, file.mimetype || 'application/octet-stream')
 }
 
-function streamToBuffer(req, file, cb) {
-  var _buf = [];
-  var stream = file.stream
-  stream.on('data', function (chunk) { _buf.push(chunk) });
-  stream.on('end', function () { cb(null, Buffer.concat(_buf), file.stream) });
-  stream.on('error', function (err) { cb(err) });
-}
-
 function collect(storage, req, file, cb) {
   parallel([
     storage.getBucket.bind(storage, req, file),
@@ -71,24 +63,19 @@ function collect(storage, req, file, cb) {
     storage.getContentType(req, file, function (err, contentType, replacementStream) {
       if (err) return cb(err)
 
-      streamToBuffer(req, file, function (err, buffer, stream) {
-        if (err) return cb(err)
-
-        cb.call(storage, null, {
-          bucket: values[0],
-          key: values[1],
-          acl: values[2],
-          metadata: values[3],
-          cacheControl: values[4],
-          contentDisposition: values[5],
-          storageClass: values[6],
-          contentType: contentType,
-          replacementStream: replacementStream,
-          serverSideEncryption: values[7],
-          sseKmsKeyId: values[8],
-          contentEncoding: values[9],
-          buffer: buffer
-        })
+      cb.call(storage, null, {
+        bucket: values[0],
+        key: values[1],
+        acl: values[2],
+        metadata: values[3],
+        cacheControl: values[4],
+        contentDisposition: values[5],
+        storageClass: values[6],
+        contentType: contentType,
+        replacementStream: replacementStream,
+        serverSideEncryption: values[7],
+        sseKmsKeyId: values[8],
+        contentEncoding: values[9]
       })
     })
   })
@@ -191,7 +178,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
       StorageClass: opts.storageClass,
       ServerSideEncryption: opts.serverSideEncryption,
       SSEKMSKeyId: opts.sseKmsKeyId,
-      Body: (opts.replacementStream || opts.buffer)
+      Body: (opts.replacementStream || file.stream)
     }
 
     if (opts.contentDisposition) {
