@@ -46,6 +46,8 @@ function submitForm (multer, form, cb) {
   })
 }
 
+multerS3.Upload = function () {}
+
 describe('Multer S3', function () {
   it('is exposed as a function', function () {
     assert.equal(typeof multerS3, 'function')
@@ -251,7 +253,7 @@ describe('Multer S3', function () {
       assert.equal(req.body.name, 'Multer')
 
       assert.equal(req.file.fieldname, 'image')
-      assert.equal(req.file.contentType, 'application/octet-stream')
+      assert.equal(req.file.contentType, 'image/svg+xml')
       assert.equal(req.file.originalname, 'test_generated.svg')
       assert.equal(req.file.size, 34574)
       assert.equal(req.file.bucket, 'test')
@@ -279,7 +281,7 @@ describe('Multer S3', function () {
 
       assert.equal(req.body.name, 'Multer')
       assert.equal(req.file.fieldname, 'file')
-      assert.equal(req.file.contentType, 'application/octet-stream')
+      assert.equal(req.file.contentType, 'text/plain')
       assert.equal(req.file.originalname, 'a.txt')
       assert.equal(req.file.size, 7)
       assert.equal(req.file.bucket, 'test')
