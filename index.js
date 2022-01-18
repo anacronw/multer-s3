@@ -4,6 +4,7 @@ var fileType = require('file-type')
 var htmlCommentRegex = require('html-comment-regex')
 var parallel = require('run-parallel')
 var Upload = require('@aws-sdk/lib-storage').Upload
+var util = require('util')
 
 function staticValue (value) {
   return function (req, file, cb) {
