@@ -46,8 +46,6 @@ function submitForm (multer, form, cb) {
   })
 }
 
-multerS3.Upload = function () {}
-
 describe('Multer S3', function () {
   it('is exposed as a function', function () {
     assert.equal(typeof multerS3, 'function')

@@ -5,11 +5,9 @@ function createMockS3 () {
     var ee = new events.EventEmitter()
     var buffer = opts['input']['Body']
     ee.emit('httpUploadProgress', { total: buffer.length })
-    return new Promise(function (resolve, reject) {
-      resolve({
-        'Location': 'mock-location',
-        'ETag': 'mock-etag'
-      })
+    return Promise.resolve({
+      Location: 'mock-location',
+      ETag: 'mock-etag'
     })
   }
 

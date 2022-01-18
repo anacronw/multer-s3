@@ -19,8 +19,7 @@ npm install --save multer-s3
 ## Usage
 
 ```javascript
-const { S3Client } = require("@aws-sdk/client-s3");
-const aws = require('aws-sdk')
+const { S3Client } = require('@aws-sdk/client-s3')
 const express = require('express')
 const multer = require('multer')
 const multerS3 = require('multer-s3')
