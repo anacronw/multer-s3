@@ -28,3 +28,8 @@ node_modules
 
 # Generated test files
 /test/files/test_generated.svg
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
