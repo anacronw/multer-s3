@@ -7,7 +7,7 @@ This project is mostly an integration piece for existing code samples from Multe
 ## Installation
 
 ```sh
-npm install --save multer-s3
+npm i @multer/s3
 ```
 
 ## Usage
