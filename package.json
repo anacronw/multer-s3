@@ -1,14 +1,14 @@
 {
-  "name": "multer-s3",
-  "version": "2.10.0",
-  "description": "Streaming multer storage engine for AWS S3",
+  "name": "@multer/s3",
+  "version": "1.0.0",
+  "description": "Streaming multer storage engine for AWS S3, Fork of badunk/multer-s3",
   "main": "index.js",
   "scripts": {
     "test": "standard && mocha test/basic.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/badunk/multer-s3.git"
+    "url": "git+https://github.com/pyscriptbug/multer-s3.git"
   },
   "keywords": [
     "multer",
@@ -16,12 +16,15 @@
     "amazon",
     "aws"
   ],
-  "author": "badunk",
+  "authors": "badunk",
+  "contributors": [
+    "Catriel Guillen <catrielguillen@gmail.com> (https://github.com/pyscriptbug)"
+  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/badunk/multer-s3/issues"
+    "url": "https://github.com/pyscriptbug/multer-s3/issues"
   },
-  "homepage": "https://github.com/badunk/multer-s3#readme",
+  "homepage": "https://github.com/pyscriptbug/multer-s3#readme",
   "dependencies": {
     "@aws-sdk/lib-storage": "^3.99.0",
     "file-type": "^3.3.0",
