@@ -2,7 +2,13 @@
 
 Streaming multer storage engine for AWS S3.
 
-This project is mostly an integration piece for existing code samples from Multer's [storage engine documentation](https://github.com/expressjs/multer/blob/master/StorageEngine.md) with a call to `s3.upload` (see the [aws-sdk docs](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#upload-property)) as the substitution piece for file system.  Existing solutions I found required buffering the multipart uploads into the actual filesystem which is difficult to scale.
+This project is mostly an integration piece for existing code samples from Multer's [storage engine documentation](https://github.com/expressjs/multer/blob/master/StorageEngine.md) with a call to S3 as the substitution piece for file system.  Existing solutions I found required buffering the multipart uploads into the actual filesystem which is difficult to scale.
+
+## AWS SDK Versions
+
+3.x.x releases of multer-s3 use AWS JavaScript SDK v3. Specifically, it uses the Upload class from [@aws-sdk/lib-storage](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/modules/_aws_sdk_lib_storage.html) which in turn calls the modular [S3Client](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-s3/classes/s3client.html).
+
+2.x.x releases for multer-s3 use AWS JavaScript SDK v2 via a call to [s3.upload](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#upload-property).
 
 ## Installation
 
@@ -13,15 +19,16 @@ npm install --save multer-s3
 ## Usage
 
 ```javascript
-var aws = require('aws-sdk')
-var express = require('express')
-var multer = require('multer')
-var multerS3 = require('multer-s3')
+const { S3Client } = require('@aws-sdk/client-s3')
+const express = require('express')
+const multer = require('multer')
+const multerS3 = require('multer-s3')
 
-var app = express()
-var s3 = new aws.S3({ /* ... */ })
+const app = express()
 
-var upload = multer({
+const s3 = new S3Client()
+
+const upload = multer({
   storage: multerS3({
     s3: s3,
     bucket: 'some-bucket',

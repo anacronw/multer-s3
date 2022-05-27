@@ -3,6 +3,8 @@ var stream = require('stream')
 var fileType = require('file-type')
 var htmlCommentRegex = require('html-comment-regex')
 var parallel = require('run-parallel')
+var Upload = require('@aws-sdk/lib-storage').Upload
+var util = require('util')
 
 function staticValue (value) {
   return function (req, file, cb) {
@@ -207,13 +209,16 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
       params.ContentEncoding = opts.contentEncoding
     }
 
-    var upload = this.s3.upload(params)
+    var upload = new Upload({
+      client: this.s3,
+      params: params
+    })
 
     upload.on('httpUploadProgress', function (ev) {
       if (ev.total) currentSize = ev.total
     })
 
-    upload.send(function (err, result) {
+    util.callbackify(upload.done.bind(upload))(function (err, result) {
       if (err) return cb(err)
 
       cb(null, {
