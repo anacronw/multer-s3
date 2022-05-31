@@ -4,6 +4,7 @@ var fileType = require('file-type')
 var htmlCommentRegex = require('html-comment-regex')
 var parallel = require('run-parallel')
 var Upload = require('@aws-sdk/lib-storage').Upload
+var DeleteObjectCommand = require('@aws-sdk/client-s3').DeleteObjectCommand
 var util = require('util')
 
 function staticValue (value) {
@@ -15,7 +16,7 @@ function staticValue (value) {
 var defaultAcl = staticValue('private')
 var defaultContentType = staticValue('application/octet-stream')
 
-var defaultMetadata = staticValue(null)
+var defaultMetadata = staticValue(undefined)
 var defaultCacheControl = staticValue(null)
 var defaultContentDisposition = staticValue(null)
 var defaultContentEncoding = staticValue(null)
@@ -241,7 +242,13 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
 }
 
 S3Storage.prototype._removeFile = function (req, file, cb) {
-  this.s3.deleteObject({ Bucket: file.bucket, Key: file.key }, cb)
+  this.s3.send(
+    new DeleteObjectCommand({
+      Bucket: file.bucket,
+      Key: file.key
+    }),
+    cb
+  )
 }
 
 module.exports = function (opts) {
