@@ -15,7 +15,7 @@ function staticValue (value) {
 var defaultAcl = staticValue('private')
 var defaultContentType = staticValue('application/octet-stream')
 
-var defaultMetadata = staticValue(null)
+var defaultMetadata = staticValue(undefined)
 var defaultCacheControl = staticValue(null)
 var defaultContentDisposition = staticValue(null)
 var defaultContentEncoding = staticValue(null)
