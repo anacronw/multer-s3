@@ -31,6 +31,9 @@
     "html-comment-regex": "^1.1.2",
     "run-parallel": "^1.1.6"
   },
+  "peerDependencies": {
+    "@aws-sdk/client-s3": "^3.0.0"
+  },
   "devDependencies": {
     "express": "^4.13.1",
     "form-data": "^1.0.0-rc3",
