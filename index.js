@@ -4,7 +4,7 @@ var fileType = require('file-type')
 var htmlCommentRegex = require('html-comment-regex')
 var parallel = require('run-parallel')
 var Upload = require('@aws-sdk/lib-storage').Upload
-var DeleteObjectCommand = require('@aws-sdk/client-s3').DeleteObjectCommand;
+var DeleteObjectCommand = require('@aws-sdk/client-s3').DeleteObjectCommand
 var util = require('util')
 
 function staticValue (value) {
@@ -245,9 +245,9 @@ S3Storage.prototype._removeFile = function (req, file, cb) {
   this.s3.send(
     new DeleteObjectCommand({
       Bucket: file.bucket,
-      Key: file.key,
+      Key: file.key
     }),
-    cb,
+    cb
   )
 }
 
