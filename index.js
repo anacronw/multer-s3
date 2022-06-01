@@ -102,6 +102,15 @@ function collect (storage, req, file, cb) {
   })
 }
 
+/**
+ * If the current aws client is v2 will use upload method, otherwise will use Upload constructor
+ * @param s3 S3 Client or S3 instance
+ * @param params PutObjectCommandInput object
+ */
+function buildUpload (s3, params) {
+  return s3.upload ? s3.upload(params) : new Upload({ client: s3, params: params })
+}
+
 function S3Storage (opts) {
   switch (typeof opts.s3) {
     case 'object': this.s3 = opts.s3; break
@@ -210,16 +219,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
       params.ContentEncoding = opts.contentEncoding
     }
 
-    var upload = new Upload({
-      client: this.s3,
-      params: params
-    })
-
-    upload.on('httpUploadProgress', function (ev) {
-      if (ev.total) currentSize = ev.total
-    })
-
-    util.callbackify(upload.done.bind(upload))(function (err, result) {
+    var cbHandler = function (err, result) {
       if (err) return cb(err)
 
       cb(null, {
@@ -237,18 +237,34 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
         etag: result.ETag,
         versionId: result.VersionId
       })
+    }
+
+    var upload = buildUpload(this.s3, params)
+
+    upload.on('httpUploadProgress', function (ev) {
+      if (ev.total) currentSize = ev.total
     })
+
+    // If uploader has a `send` method it means is sdk v2 and will call that method.
+    // Otherwise it will call the `done` method of the v3 Upload class.
+    upload.send
+      ? upload.send(cbHandler)
+      : util.callbackify(upload.done.bind(upload))(cbHandler)
   })
 }
 
 S3Storage.prototype._removeFile = function (req, file, cb) {
-  this.s3.send(
-    new DeleteObjectCommand({
-      Bucket: file.bucket,
-      Key: file.key
-    }),
-    cb
-  )
+  // If s3 client instance has a `deleteObject` method it means is sdk v2 and will call that method.
+  // Otherwise it will call the `send` method of the v3 Upload class with a DeleteObjecteCommand.
+  this.s3.deleteObject
+    ? this.s3.deleteObject({ Bucket: file.bucket, Key: file.key }, cb)
+    : this.s3.send(
+      new DeleteObjectCommand({
+        Bucket: file.bucket,
+        Key: file.key
+      }),
+      cb
+    )
 }
 
 module.exports = function (opts) {

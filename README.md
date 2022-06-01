@@ -6,6 +6,8 @@ This project is mostly an integration piece for existing code samples from Multe
 
 ## AWS SDK Versions
 
+3.1.x or higher releases of multer-s3 will work with both AWS JavasScript SDK v2 and v3.
+
 3.x.x releases of multer-s3 use AWS JavaScript SDK v3. Specifically, it uses the Upload class from [@aws-sdk/lib-storage](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/modules/_aws_sdk_lib_storage.html) which in turn calls the modular [S3Client](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-s3/classes/s3client.html).
 
 2.x.x releases for multer-s3 use AWS JavaScript SDK v2 via a call to [s3.upload](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#upload-property).
@@ -18,6 +20,16 @@ npm install --save multer-s3
 
 ## Usage
 
+### AWS Javascript SDK v2
+```javascript
+const { S3 } = require('aws-sdk')
+
+const s3 = new S3({
+  // ...S3 Client options
+})
+```
+
+### AWS Javascript SDK v3
 ```javascript
 const { S3Client } = require('@aws-sdk/client-s3')
 const express = require('express')
@@ -26,7 +38,9 @@ const multerS3 = require('multer-s3')
 
 const app = express()
 
-const s3 = new S3Client()
+const s3 = new S3Client({
+  // ...S3 Client options
+})
 
 const upload = multer({
   storage: multerS3({
