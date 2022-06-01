@@ -32,7 +32,16 @@
     "run-parallel": "^1.1.6"
   },
   "peerDependencies": {
+    "aws-sdk": "^2.0.0",
     "@aws-sdk/client-s3": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "aws-sdk": {
+      "optional": true
+    },
+    "@aws-sdk/client-s3": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "express": "^4.13.1",
