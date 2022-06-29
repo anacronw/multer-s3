@@ -103,6 +103,12 @@ function collect (storage, req, file, cb) {
 }
 
 function S3Storage (opts) {
+  switch (typeof opts.queueSize) {
+    case 'number': this.queueSize = opts.queueSize; break
+    case 'undefined': this.queueSize = 4; break
+    default: throw new TypeError('Expected opts.queueSize to be number')
+  }
+
   switch (typeof opts.s3) {
     case 'object': this.s3 = opts.s3; break
     default: throw new TypeError('Expected opts.s3 to be object')
@@ -211,6 +217,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
     }
 
     var upload = new Upload({
+      queueSize: this.queueSize,
       client: this.s3,
       params: params
     })
