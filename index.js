@@ -1,6 +1,6 @@
 var crypto = require('crypto')
 var stream = require('stream')
-var fileType = require('file-type')
+const { fromBuffer } = require('file-type')
 var htmlCommentRegex = require('html-comment-regex')
 var parallel = require('run-parallel')
 var Upload = require('@aws-sdk/lib-storage').Upload
@@ -46,8 +46,8 @@ function defaultKey (req, file, cb) {
 }
 
 function autoContentType (req, file, cb) {
-  file.stream.once('data', function (firstChunk) {
-    var type = fileType(firstChunk)
+  file.stream.once('data', async (firstChunk) => {
+    var type = await fromBuffer(firstChunk)
     var mime = 'application/octet-stream' // default type
 
     // Make sure to check xml-extension for svg files.
