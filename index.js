@@ -222,6 +222,7 @@ S3Storage.prototype._handleFile = function (req, file, cb) {
     util.callbackify(upload.done.bind(upload))(function (err, result) {
       if (err) return cb(err)
 
+      console.log('multerS3 result: ', result);
       cb(null, {
         size: currentSize,
         bucket: opts.bucket,
