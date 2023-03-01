@@ -117,6 +117,7 @@ function S3Storage (opts) {
 
   switch (typeof opts.key) {
     case 'function': this.getKey = opts.key; break
+    case 'string': this.getKey = staticValue(opts.key); break
     case 'undefined': this.getKey = defaultKey; break
     default: throw new TypeError('Expected opts.key to be undefined or function')
   }
