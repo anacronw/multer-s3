@@ -229,6 +229,74 @@ var upload = multer({
 ```
 You may also use a function as the `contentEncoding`, which should be of the form `function(req, file, cb)`.
 
+## Transforming Files Before Upload
+
+The optional `shouldTransform` option tells multer whether it should transform the file before it is uploaded. By default, it is set to `false`. If set to `true`, `transforms` option must be added, which tells how to transform the file. `transforms` option should be an `Array`, containing objects with can have properties `id`, `key` and `transform`.
+
+```javascript
+var upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: 'some-bucket',
+    shouldTransform: function (req, file, cb) {
+      cb(null, /^image/i.test(file.mimetype))
+    },
+    transforms: [{
+      id: 'original',
+      key: function (req, file, cb) {
+        cb(null, 'image-original.jpg')
+      },
+      transform: function (req, file, cb) {
+        cb(null, sharp().jpeg())
+      }
+    }, {
+      id: 'thumbnail',
+      key: function (req, file, cb) {
+        cb(null, 'image-thumbnail.jpg')
+      },
+      transform: function (req, file, cb) {
+        cb(null, sharp().resize(100, 100).jpeg())
+      }
+    }]
+  })
+})
+```
+If this option is used, each file passed to your router request will have a `transforms` object, with every transform you defined.
+```json
+{
+  "data": {
+    "fieldname": "image",
+    "originalname": "image.jpg",
+    "encoding": "7bit",
+    "mimetype": "image/jpg",
+    "transforms": {
+     "original": {
+        "id": "original",
+        "size": 18006,
+        "bucket": "some-bucket",
+        "key": "image-original.jpg",
+        "acl": "public-read",
+        "contentType": "image/jpg",
+        "metadata": null,
+        "location": "https://some-bucket.s3.us-east-1.amazonaws.com/image-original.jpg",
+        "etag": "\"76c09df7bdd752a749f91b9663838fb2\""
+      },
+      "thumbnail": {
+        "id": "thumbnail",
+        "size": 18006,
+        "bucket": "some-bucket",
+        "key": "image-thumbnail.jpg",
+        "acl": "public-read",
+        "contentType": "image/jpg",
+        "metadata": null,
+        "location": "https://some-bucket.s3.us-east-1.amazonaws.com/image-thumbnail.jpg",
+        "etag": "\"9d554e03e37c79bff7ce31d375900db6\""
+      }
+    }
+  }
+}
+```
+
 ## Testing
 
 The tests mock all access to S3 and can be run completely offline.
