@@ -23,6 +23,8 @@ var defaultContentEncoding = staticValue(null)
 var defaultStorageClass = staticValue('STANDARD')
 var defaultSSE = staticValue(null)
 var defaultSSEKMS = staticValue(null)
+var defaultShouldTransform = staticValue(false)
+var defaultTransforms = []
 
 // Regular expression to detect svg file content, inspired by: https://github.com/sindresorhus/is-svg/blob/master/index.js
 // It is not always possible to check for an end tag if a file is very big. The firstChunk, see below, might not be the entire file.
@@ -78,7 +80,8 @@ function collect (storage, req, file, cb) {
     storage.getStorageClass.bind(storage, req, file),
     storage.getSSE.bind(storage, req, file),
     storage.getSSEKMS.bind(storage, req, file),
-    storage.getContentEncoding.bind(storage, req, file)
+    storage.getContentEncoding.bind(storage, req, file),
+    storage.getShouldTransform.bind(storage, req, file)
   ], function (err, values) {
     if (err) return cb(err)
 
@@ -97,7 +100,8 @@ function collect (storage, req, file, cb) {
         replacementStream: replacementStream,
         serverSideEncryption: values[7],
         sseKmsKeyId: values[8],
-        contentEncoding: values[9]
+        contentEncoding: values[9],
+        shouldTransform: values[10]
       })
     })
   })
@@ -183,64 +187,139 @@ function S3Storage (opts) {
     case 'undefined': this.getSSEKMS = defaultSSEKMS; break
     default: throw new TypeError('Expected opts.sseKmsKeyId to be undefined, string, or function')
   }
+
+  switch (typeof opts.shouldTransform) {
+    case 'function': this.getShouldTransform = opts.shouldTransform; break
+    case 'boolean': this.getShouldTransform = staticValue(opts.shouldTransform); break
+    case 'undefined': this.getShouldTransform = defaultShouldTransform; break
+    default: throw new TypeError('Expected opts.shouldTransform to be undefined, boolean or function')
+  }
+
+  switch (typeof opts.transforms) {
+    case 'object': this.transforms = opts.transforms; break
+    case 'undefined': this.transforms = defaultTransforms; break
+    default: throw new TypeError('Expected opts.transforms to be undefined or object')
+  }
+
+  this.transforms.map(function (transform) {
+    switch (typeof transform.id) {
+      case 'string': break
+      default: throw new TypeError('Expected opts.transform[].id to be string')
+    }
+
+    switch (typeof transform.key) {
+      case 'function': break
+      case 'string': transform.key = staticValue(transform.key); break
+      case 'undefined': transform.key = defaultKey(); break
+      default: throw new TypeError('Expected opts.transform[].key to be unedefined, string or function')
+    }
+
+    switch (typeof transform.transform) {
+      case 'function': break
+      default: throw new TypeError('Expected opts.transform[].transform to be function')
+    }
+
+    return transform
+  })
 }
 
 S3Storage.prototype._handleFile = function (req, file, cb) {
   collect(this, req, file, function (err, opts) {
     if (err) return cb(err)
 
-    var currentSize = 0
-
-    var params = {
-      Bucket: opts.bucket,
-      Key: opts.key,
-      ACL: opts.acl,
-      CacheControl: opts.cacheControl,
-      ContentType: opts.contentType,
-      Metadata: opts.metadata,
-      StorageClass: opts.storageClass,
-      ServerSideEncryption: opts.serverSideEncryption,
-      SSEKMSKeyId: opts.sseKmsKeyId,
-      Body: (opts.replacementStream || file.stream)
+    if (opts.shouldTransform) {
+      this.transformUpload(opts, req, file, cb)
+    } else {
+      this.directUpload(opts, file, cb)
     }
+  })
+}
 
-    if (opts.contentDisposition) {
-      params.ContentDisposition = opts.contentDisposition
-    }
+S3Storage.prototype.directUpload = function (opts, file, cb, piper, key, id) {
+  var currentSize = 0
 
-    if (opts.contentEncoding) {
-      params.ContentEncoding = opts.contentEncoding
-    }
+  var params = {
+    Bucket: opts.bucket,
+    Key: key || opts.key,
+    ACL: opts.acl,
+    CacheControl: opts.cacheControl,
+    ContentType: opts.contentType,
+    Metadata: opts.metadata,
+    StorageClass: opts.storageClass,
+    ServerSideEncryption: opts.serverSideEncryption,
+    SSEKMSKeyId: opts.sseKmsKeyId,
+    Body: piper ? (opts.replacementStream || file.stream).pipe(piper) : (opts.replacementStream || file.stream)
+  }
 
-    var upload = new Upload({
-      client: this.s3,
-      params: params
-    })
+  if (opts.contentDisposition) {
+    params.ContentDisposition = opts.contentDisposition
+  }
 
-    upload.on('httpUploadProgress', function (ev) {
-      if (ev.total) currentSize = ev.total
-    })
+  if (opts.contentEncoding) {
+    params.ContentEncoding = opts.contentEncoding
+  }
 
-    util.callbackify(upload.done.bind(upload))(function (err, result) {
-      if (err) return cb(err)
+  var upload = new Upload({
+    client: this.s3,
+    params: params
+  })
 
-      cb(null, {
-        size: currentSize,
-        bucket: opts.bucket,
-        key: opts.key,
-        acl: opts.acl,
-        contentType: opts.contentType,
-        contentDisposition: opts.contentDisposition,
-        contentEncoding: opts.contentEncoding,
-        storageClass: opts.storageClass,
-        serverSideEncryption: opts.serverSideEncryption,
-        metadata: opts.metadata,
-        location: result.Location,
-        etag: result.ETag,
-        versionId: result.VersionId
-      })
+  upload.on('httpUploadProgress', function (ev) {
+    if (ev.total) currentSize = ev.total
+  })
+
+  util.callbackify(upload.done.bind(upload))(function (err, result) {
+    if (err) return cb(err)
+
+    cb(null, {
+      id: id,
+      size: currentSize,
+      bucket: opts.bucket,
+      key: key || opts.key,
+      acl: opts.acl,
+      contentType: opts.contentType,
+      contentDisposition: opts.contentDisposition,
+      contentEncoding: opts.contentEncoding,
+      storageClass: opts.storageClass,
+      serverSideEncryption: opts.serverSideEncryption,
+      metadata: opts.metadata,
+      location: result.Location,
+      etag: result.ETag,
+      versionId: result.VersionId
     })
   })
+}
+
+S3Storage.prototype.transformUpload = function (opts, req, file, cb) {
+  var storage = this
+  var transforms = {}
+  var transformsCount = 0
+
+  parallel(
+    storage.transforms.map(function (transform) {
+      return transform.key.bind(storage, req, file)
+    }),
+    function (err, keys) {
+      if (err) return cb(err)
+
+      keys.forEach(function (key, i) {
+        storage.transforms[i].transform(req, file, function (err, piper) {
+          if (err) return cb(err)
+          var id = storage.transforms[i].id || i
+
+          storage.directUpload(opts, file, function (err, result) {
+            if (err) return cb(err)
+
+            transforms[id] = result
+            transformsCount++
+            if (transformsCount === keys.length) {
+              cb(null, { transforms })
+            }
+          }, piper, key, id)
+        })
+      })
+    }
+  )
 }
 
 S3Storage.prototype._removeFile = function (req, file, cb) {
