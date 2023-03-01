@@ -47,22 +47,23 @@ function defaultKey (req, file, cb) {
 
 function autoContentType (req, file, cb) {
   file.stream.once('data', function (firstChunk) {
-    var type = fileType(firstChunk)
-    var mime = 'application/octet-stream' // default type
+    fileType.fromBuffer(firstChunk).then(function (type) {
+      var mime = 'application/octet-stream' // default type
 
-    // Make sure to check xml-extension for svg files.
-    if ((!type || type.ext === 'xml') && isSvg(firstChunk.toString())) {
-      mime = 'image/svg+xml'
-    } else if (type) {
-      mime = type.mime
-    }
+      // Make sure to check xml-extension for svg files.
+      if ((!type || type.ext === 'xml') && isSvg(firstChunk.toString())) {
+        mime = 'image/svg+xml'
+      } else if (type) {
+        mime = type.mime
+      }
 
-    var outStream = new stream.PassThrough()
+      var outStream = new stream.PassThrough()
 
-    outStream.write(firstChunk)
-    file.stream.pipe(outStream)
+      outStream.write(firstChunk)
+      file.stream.pipe(outStream)
 
-    cb(null, mime, outStream)
+      cb(null, mime, outStream)
+    })
   })
 }
 
