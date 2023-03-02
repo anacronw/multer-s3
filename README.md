@@ -264,34 +264,32 @@ var upload = multer({
 If this option is used, each file passed to your router request will have a `transforms` object, with every transform you defined.
 ```json
 {
-  "data": {
-    "fieldname": "image",
-    "originalname": "image.jpg",
-    "encoding": "7bit",
-    "mimetype": "image/jpg",
-    "transforms": {
-     "original": {
-        "id": "original",
-        "size": 18006,
-        "bucket": "some-bucket",
-        "key": "image-original.jpg",
-        "acl": "public-read",
-        "contentType": "image/jpg",
-        "metadata": null,
-        "location": "https://some-bucket.s3.us-east-1.amazonaws.com/image-original.jpg",
-        "etag": "\"76c09df7bdd752a749f91b9663838fb2\""
-      },
-      "thumbnail": {
-        "id": "thumbnail",
-        "size": 18006,
-        "bucket": "some-bucket",
-        "key": "image-thumbnail.jpg",
-        "acl": "public-read",
-        "contentType": "image/jpg",
-        "metadata": null,
-        "location": "https://some-bucket.s3.us-east-1.amazonaws.com/image-thumbnail.jpg",
-        "etag": "\"9d554e03e37c79bff7ce31d375900db6\""
-      }
+  "fieldname":"image",
+  "originalname":"image.jpg",
+  "encoding":"7bit",
+  "mimetype":"image/jpg",
+  "transforms":{
+    "original":{
+      "id":"original",
+      "size":18006,
+      "bucket":"some-bucket",
+      "key":"image-original.jpg",
+      "acl":"public-read",
+      "contentType":"image/jpg",
+      "metadata":null,
+      "location":"https://some-bucket.s3.us-east-1.amazonaws.com/image-original.jpg",
+      "etag":"76c09df7bdd752a749f91b9663838fb2"
+    },
+    "thumbnail":{
+      "id":"thumbnail",
+      "size":18006,
+      "bucket":"some-bucket",
+      "key":"image-thumbnail.jpg",
+      "acl":"public-read",
+      "contentType":"image/jpg",
+      "metadata":null,
+      "location":"https://some-bucket.s3.us-east-1.amazonaws.com/image-thumbnail.jpg",
+      "etag":"9d554e03e37c79bff7ce31d375900db6"
     }
   }
 }
