@@ -36,5 +36,8 @@
     "on-finished": "^2.3.0",
     "standard": "7.0.0",
     "xtend": "^4.0.1"
+  },
+  "overrides": {
+    "lodash": "4.17.21"
   }
 }
