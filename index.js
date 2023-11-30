@@ -1,21 +1,12 @@
 var crypto = require('crypto')
 var stream = require('stream')
 var fileType = require('file-type')
-var htmlCommentRegex = require('html-comment-regex')
-var parallel = require('run-parallel')
 var Upload = require('@aws-sdk/lib-storage').Upload
 var DeleteObjectCommand = require('@aws-sdk/client-s3').DeleteObjectCommand
 var util = require('util')
 
-function staticValue (value) {
-  return function (req, file, cb) {
-    cb(null, value)
-  }
-}
-
 var defaultAcl = staticValue('private')
 var defaultContentType = staticValue('application/octet-stream')
-
 var defaultMetadata = staticValue(undefined)
 var defaultCacheControl = staticValue(null)
 var defaultContentDisposition = staticValue(null)
@@ -24,22 +15,7 @@ var defaultStorageClass = staticValue('STANDARD')
 var defaultSSE = staticValue(null)
 var defaultSSEKMS = staticValue(null)
 var defaultShouldTransform = staticValue(false)
-var defaultTransforms = []
-
-// Regular expression to detect svg file content, inspired by: https://github.com/sindresorhus/is-svg/blob/master/index.js
-// It is not always possible to check for an end tag if a file is very big. The firstChunk, see below, might not be the entire file.
-var svgRegex = /^\s*(?:<\?xml[^>]*>\s*)?(?:<!doctype svg[^>]*>\s*)?<svg[^>]*>/i
-
-function isSvg (svg) {
-  // Remove DTD entities
-  svg = svg.replace(/\s*<!Entity\s+\S*\s*(?:"|')[^"]+(?:"|')\s*>/img, '')
-  // Remove DTD markup declarations
-  svg = svg.replace(/\[?(?:\s*<![A-Z]+[^>]*>\s*)*\]?/g, '')
-  // Remove HTML comments
-  svg = svg.replace(htmlCommentRegex, '')
-
-  return svgRegex.test(svg)
-}
+var defaultTransformers = []
 
 function defaultKey (req, file, cb) {
   crypto.randomBytes(16, function (err, raw) {
@@ -47,7 +23,42 @@ function defaultKey (req, file, cb) {
   })
 }
 
+function staticValue (value) {
+  return function (req, file, cb) {
+    cb(null, value)
+  }
+}
+
+function waterfall (funcs, callback) {
+  var index = 0
+  var values = []
+
+  function next (err, value) {
+    if (err) return callback(err)
+    values.push(value)
+    if (index >= funcs.length) return callback(null, values)
+    funcs[index++](next)
+  }
+
+  funcs[index++](next)
+}
+
 function autoContentType (req, file, cb) {
+  // Regular expression to detect svg file content, inspired by: https://github.com/sindresorhus/is-svg/blob/master/index.js
+  // It is not always possible to check for an end tag if a file is very big. The firstChunk, see below, might not be the entire file.
+  var svgRegex = /^\s*(?:<\?xml[^>]*>\s*)?(?:<!doctype svg[^>]*>\s*)?<svg[^>]*>/i
+
+  function isSvg (svg) {
+    // Remove DTD entities
+    svg = svg.replace(/\s*<!Entity\s+\S*\s*(?:"|')[^"]+(?:"|')\s*>/img, '')
+    // Remove DTD markup declarations
+    svg = svg.replace(/\[?(?:\s*<![A-Z]+[^>]*>\s*)*\]?/g, '')
+    // Remove HTML comments
+    svg = svg.replace(/<!--([\s\S]*?)-->/g, '')
+
+    return svgRegex.test(svg)
+  }
+
   file.stream.once('data', function (firstChunk) {
     fileType.fromBuffer(firstChunk).then(function (type) {
       var mime = 'application/octet-stream' // default type
@@ -70,7 +81,7 @@ function autoContentType (req, file, cb) {
 }
 
 function collect (storage, req, file, cb) {
-  parallel([
+  waterfall([
     storage.getBucket.bind(storage, req, file),
     storage.getKey.bind(storage, req, file),
     storage.getAcl.bind(storage, req, file),
@@ -195,43 +206,31 @@ function S3Storage (opts) {
     default: throw new TypeError('Expected opts.shouldTransform to be undefined, boolean or function')
   }
 
-  switch (typeof opts.transforms) {
-    case 'object': this.transforms = opts.transforms; break
-    case 'undefined': this.transforms = defaultTransforms; break
+  switch (typeof opts.transformers) {
+    case 'object': this.transformers = opts.transformers; break
+    case 'undefined': this.transformers = defaultTransformers; break
     default: throw new TypeError('Expected opts.transforms to be undefined or object')
   }
 
-  this.transforms.map(function (transform) {
-    switch (typeof transform.id) {
+  this.transformers.map(function (transformer) {
+    switch (typeof transformer.id) {
       case 'string': break
-      default: throw new TypeError('Expected opts.transform[].id to be string')
+      default: throw new TypeError('Expected opts.transformer[].id to be string')
     }
 
-    switch (typeof transform.key) {
+    switch (typeof transformer.key) {
       case 'function': break
-      case 'string': transform.key = staticValue(transform.key); break
-      case 'undefined': transform.key = defaultKey(); break
-      default: throw new TypeError('Expected opts.transform[].key to be unedefined, string or function')
+      case 'string': transformer.key = staticValue(transformer.key); break
+      case 'undefined': transformer.key = defaultKey(); break
+      default: throw new TypeError('Expected opts.transformer[].key to be unedefined, string or function')
     }
 
-    switch (typeof transform.transform) {
+    switch (typeof transformer.transform) {
       case 'function': break
-      default: throw new TypeError('Expected opts.transform[].transform to be function')
+      default: throw new TypeError('Expected opts.transformer[].transform to be function')
     }
 
-    return transform
-  })
-}
-
-S3Storage.prototype._handleFile = function (req, file, cb) {
-  collect(this, req, file, function (err, opts) {
-    if (err) return cb(err)
-
-    if (opts.shouldTransform) {
-      this.transformUpload(opts, req, file, cb)
-    } else {
-      this.directUpload(opts, file, cb)
-    }
+    return transformer
   })
 }
 
@@ -292,34 +291,44 @@ S3Storage.prototype.directUpload = function (opts, file, cb, piper, key, id) {
 
 S3Storage.prototype.transformUpload = function (opts, req, file, cb) {
   var storage = this
-  var transforms = {}
-  var transformsCount = 0
+  var transformations = {}
 
-  parallel(
-    storage.transforms.map(function (transform) {
+  waterfall(
+    storage.transformers.map(function (transform) {
       return transform.key.bind(storage, req, file)
     }),
     function (err, keys) {
       if (err) return cb(err)
 
       keys.forEach(function (key, i) {
-        storage.transforms[i].transform(req, file, function (err, piper) {
+        storage.transformers[i].transform(req, file, function (err, piper) {
           if (err) return cb(err)
-          var id = storage.transforms[i].id || i
+          var id = storage.transformers[i].id || i
 
           storage.directUpload(opts, file, function (err, result) {
             if (err) return cb(err)
 
-            transforms[id] = result
-            transformsCount++
-            if (transformsCount === keys.length) {
-              cb(null, { transforms })
+            transformations[id] = result
+            if (i === keys.length - 1) {
+              cb(null, { transformations: transformations })
             }
           }, piper, key, id)
         })
       })
     }
   )
+}
+
+S3Storage.prototype._handleFile = function (req, file, cb) {
+  collect(this, req, file, function (err, opts) {
+    if (err) return cb(err)
+
+    if (opts.shouldTransform) {
+      this.transformUpload(opts, req, file, cb)
+    } else {
+      this.directUpload(opts, file, cb)
+    }
+  })
 }
 
 S3Storage.prototype._removeFile = function (req, file, cb) {

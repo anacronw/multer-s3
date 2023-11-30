@@ -291,7 +291,7 @@ describe('Multer S3', function () {
     })
   })
 
-  it('uploads PNG file with transforms', function (done) {
+  it('uploads PNG file with transformers', function (done) {
     var s3 = mockS3()
     var form = new FormData()
     var storage = multerS3({
@@ -299,7 +299,7 @@ describe('Multer S3', function () {
       bucket: 'test',
       contentType: multerS3.AUTO_CONTENT_TYPE,
       shouldTransform: true,
-      transforms: [
+      transformers: [
         {
           id: 'original',
           key: 'original',
@@ -333,14 +333,14 @@ describe('Multer S3', function () {
       assert.equal(req.file.fieldname, 'image')
       assert.equal(req.file.mimetype, 'image/png')
       assert.equal(req.file.originalname, 'ffffff.png')
-      assert.equal(req.file.transforms.original.size, 68)
-      assert.equal(req.file.transforms.original.bucket, 'test')
-      assert.equal(req.file.transforms.original.etag, 'mock-etag')
-      assert.equal(req.file.transforms.original.location, 'https//test.hostname/original')
-      assert.equal(req.file.transforms.thumbnail.size, 68)
-      assert.equal(req.file.transforms.thumbnail.bucket, 'test')
-      assert.equal(req.file.transforms.thumbnail.etag, 'mock-etag')
-      assert.equal(req.file.transforms.thumbnail.location, 'https//test.hostname/thumbnail')
+      assert.equal(req.file.transformations.original.size, 68)
+      assert.equal(req.file.transformations.original.bucket, 'test')
+      assert.equal(req.file.transformations.original.etag, 'mock-etag')
+      assert.equal(req.file.transformations.original.location, 'https//test.hostname/original')
+      assert.equal(req.file.transformations.thumbnail.size, 68)
+      assert.equal(req.file.transformations.thumbnail.bucket, 'test')
+      assert.equal(req.file.transformations.thumbnail.etag, 'mock-etag')
+      assert.equal(req.file.transformations.thumbnail.location, 'https//test.hostname/thumbnail')
 
       done()
     })
@@ -354,7 +354,7 @@ describe('Multer S3', function () {
   //     bucket: 'test',
   //     contentType: multerS3.AUTO_CONTENT_TYPE,
   //     shouldTransform: true,
-  //     transforms: [
+  //     transformers: [
   //       {
   //         id: 'original',
   //         key: 'original',
@@ -390,14 +390,14 @@ describe('Multer S3', function () {
   //     assert.equal(req.files[0].fieldname, 'images')
   //     assert.equal(req.files[0].mimetype, 'image/png')
   //     assert.equal(req.files[0].originalname, 'ffffff.png')
-  //     assert.equal(req.files[0].transforms.original.size, 68)
-  //     assert.equal(req.files[0].transforms.original.bucket, 'test')
-  //     assert.equal(req.files[0].transforms.original.etag, 'mock-etag')
-  //     assert.equal(req.files[0].transforms.original.location, 'https//test.hostname/original')
-  //     assert.equal(req.files[0].transforms.thumbnail.size, 68)
-  //     assert.equal(req.files[0].transforms.thumbnail.bucket, 'test')
-  //     assert.equal(req.files[0].transforms.thumbnail.etag, 'mock-etag')
-  //     assert.equal(req.files[0].transforms.thumbnail.location, 'https//test.hostname/thumbnail')
+  //     assert.equal(req.files[0].transformations.original.size, 68)
+  //     assert.equal(req.files[0].transformations.original.bucket, 'test')
+  //     assert.equal(req.files[0].transformations.original.etag, 'mock-etag')
+  //     assert.equal(req.files[0].transformations.original.location, 'https//test.hostname/original')
+  //     assert.equal(req.files[0].transformations.thumbnail.size, 68)
+  //     assert.equal(req.files[0].transformations.thumbnail.bucket, 'test')
+  //     assert.equal(req.files[0].transformations.thumbnail.etag, 'mock-etag')
+  //     assert.equal(req.files[0].transformations.thumbnail.location, 'https//test.hostname/thumbnail')
 
   //     assert.equal(req.files[1].fieldname, 'images')
   //     assert.equal(req.files[1].mimetype, 'image/svg+xml')

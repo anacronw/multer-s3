@@ -231,7 +231,7 @@ You may also use a function as the `contentEncoding`, which should be of the for
 
 ## Transforming Files Before Upload
 
-The optional `shouldTransform` option tells multer whether it should transform the file before it is uploaded. By default, it is set to `false`. If set to `true`, `transforms` option must be added, which tells how to transform the file. `transforms` option should be an `Array`, containing objects with can have properties `id`, `key` and `transform`.
+The optional `shouldTransform` option tells multer whether it should transform the file before it is uploaded. By default, it is set to `false`. If set to `true`, `transformers` option must be added, which tells how to transform the file. `transformers` option should be an `Array`, containing objects with can have properties `id`, `key` and `transform`.
 
 ```javascript
 var upload = multer({
@@ -241,7 +241,7 @@ var upload = multer({
     shouldTransform: function (req, file, cb) {
       cb(null, /^image/i.test(file.mimetype))
     },
-    transforms: [{
+    transformers: [{
       id: 'original',
       key: function (req, file, cb) {
         cb(null, 'image-original.jpg')
@@ -261,14 +261,14 @@ var upload = multer({
   })
 })
 ```
-If this option is used, each file passed to your router request will have a `transforms` object, with every transform you defined.
+If this option is used, each file passed to your router request will have a `transformations` object, with every transform you defined.
 ```json
 {
   "fieldname":"image",
   "originalname":"image.jpg",
   "encoding":"7bit",
   "mimetype":"image/jpg",
-  "transforms":{
+  "transformations":{
     "original":{
       "id":"original",
       "size":18006,
