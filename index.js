@@ -292,6 +292,7 @@ S3Storage.prototype.directUpload = function (opts, file, cb, piper, key, id) {
 S3Storage.prototype.transformUpload = function (opts, req, file, cb) {
   var storage = this
   var transformations = {}
+  var pending = storage.transformers.length
 
   waterfall(
     storage.transformers.map(function (transform) {
@@ -309,9 +310,7 @@ S3Storage.prototype.transformUpload = function (opts, req, file, cb) {
             if (err) return cb(err)
 
             transformations[id] = result
-            if (i === keys.length - 1) {
-              cb(null, { transformations: transformations })
-            }
+            if (--pending === 0) cb(null, { transformations: transformations })
           }, piper, key, id)
         })
       })
