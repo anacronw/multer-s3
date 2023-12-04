@@ -314,7 +314,8 @@ describe('Multer S3', function () {
           },
           transform: function (req, file, cb) {
             cb(null, new stream.PassThrough())
-          }
+          },
+          contentType: 'image/webp'
         }
       ]
     })
@@ -337,112 +338,118 @@ describe('Multer S3', function () {
       assert.equal(req.file.transformations.original.bucket, 'test')
       assert.equal(req.file.transformations.original.etag, 'mock-etag')
       assert.equal(req.file.transformations.original.location, 'https//test.hostname/original')
+      assert.equal(req.file.transformations.original.contentType, 'image/png')
       assert.equal(req.file.transformations.thumbnail.size, 68)
       assert.equal(req.file.transformations.thumbnail.bucket, 'test')
       assert.equal(req.file.transformations.thumbnail.etag, 'mock-etag')
       assert.equal(req.file.transformations.thumbnail.location, 'https//test.hostname/thumbnail')
+      assert.equal(req.file.transformations.thumbnail.contentType, 'image/webp')
 
       done()
     })
   })
 
-  // it('uploads a PNG and SVG file with transforms', function (done) {
-  //   var s3 = mockS3()
-  //   var form = new FormData()
-  //   var storage = multerS3({
-  //     s3: s3,
-  //     bucket: 'test',
-  //     contentType: multerS3.AUTO_CONTENT_TYPE,
-  //     shouldTransform: true,
-  //     transformers: [
-  //       {
-  //         id: 'original',
-  //         key: 'original',
-  //         transform: function (req, file, cb) {
-  //           cb(null, new stream.PassThrough())
-  //         }
-  //       },
-  //       {
-  //         id: 'thumbnail',
-  //         key: function (req, file, cb) {
-  //           cb(null, 'thumbnail')
-  //         },
-  //         transform: function (req, file, cb) {
-  //           cb(null, new stream.PassThrough())
-  //         }
-  //       }
-  //     ]
-  //   })
-  //   var upload = multer({ storage: storage })
-  //   var parser = upload.array('images', 2)
-  //   var image1 = fs.createReadStream(path.join(__dirname, 'files', 'ffffff.png'))
-  //   var image2 = fs.createReadStream(path.join(__dirname, 'files', 'test2.svg'))
+  it('uploads a PNG and SVG file with transforms', function (done) {
+    var s3 = mockS3()
+    var form = new FormData()
+    var storage = multerS3({
+      s3: s3,
+      bucket: 'test',
+      contentType: multerS3.AUTO_CONTENT_TYPE,
+      shouldTransform: true,
+      transformers: [
+        {
+          id: 'original',
+          key: 'original',
+          transform: function (req, file, cb) {
+            cb(null, new stream.PassThrough())
+          }
+        },
+        {
+          id: 'thumbnail',
+          key: function (req, file, cb) {
+            cb(null, 'thumbnail')
+          },
+          transform: function (req, file, cb) {
+            cb(null, new stream.PassThrough())
+          }
+        }
+      ]
+    })
+    var upload = multer({ storage: storage })
+    var parser = upload.array('images', 2)
+    var image1 = fs.createReadStream(path.join(__dirname, 'files', 'ffffff.png'))
+    var image2 = fs.createReadStream(path.join(__dirname, 'files', 'test2.svg'))
 
-  //   form.append('name', 'Multer')
-  //   form.append('images', image1)
-  //   form.append('images', image2)
+    form.append('name', 'Multer')
+    form.append('images', image1)
+    form.append('images', image2)
 
-  //   submitForm(parser, form, function (err, req) {
-  //     assert.ifError(err)
+    submitForm(parser, form, function (err, req) {
+      assert.ifError(err)
 
-  //     assert.equal(req.body.name, 'Multer')
+      assert.equal(req.body.name, 'Multer')
 
-  //     assert.equal(req.files[0].fieldname, 'images')
-  //     assert.equal(req.files[0].mimetype, 'image/png')
-  //     assert.equal(req.files[0].originalname, 'ffffff.png')
-  //     assert.equal(req.files[0].transformations.original.size, 68)
-  //     assert.equal(req.files[0].transformations.original.bucket, 'test')
-  //     assert.equal(req.files[0].transformations.original.etag, 'mock-etag')
-  //     assert.equal(req.files[0].transformations.original.location, 'https//test.hostname/original')
-  //     assert.equal(req.files[0].transformations.thumbnail.size, 68)
-  //     assert.equal(req.files[0].transformations.thumbnail.bucket, 'test')
-  //     assert.equal(req.files[0].transformations.thumbnail.etag, 'mock-etag')
-  //     assert.equal(req.files[0].transformations.thumbnail.location, 'https//test.hostname/thumbnail')
+      assert.equal(req.files[0].fieldname, 'images')
+      assert.equal(req.files[0].mimetype, 'image/png')
+      assert.equal(req.files[0].originalname, 'ffffff.png')
+      assert.equal(req.files[0].transformations.original.size, 68)
+      assert.equal(req.files[0].transformations.original.bucket, 'test')
+      assert.equal(req.files[0].transformations.original.etag, 'mock-etag')
+      assert.equal(req.files[0].transformations.original.location, 'https//test.hostname/original')
+      assert.equal(req.files[0].transformations.thumbnail.size, 68)
+      assert.equal(req.files[0].transformations.thumbnail.bucket, 'test')
+      assert.equal(req.files[0].transformations.thumbnail.etag, 'mock-etag')
+      assert.equal(req.files[0].transformations.thumbnail.location, 'https//test.hostname/thumbnail')
 
-  //     assert.equal(req.files[1].fieldname, 'images')
-  //     assert.equal(req.files[1].mimetype, 'image/svg+xml')
-  //     assert.equal(req.files[1].originalname, 'test2.svg')
-  //   })
-  // })
+      assert.equal(req.files[1].fieldname, 'images')
+      assert.equal(req.files[1].mimetype, 'image/svg+xml')
+      assert.equal(req.files[1].originalname, 'test2.svg')
 
-  // it('uploads a PNG and SVG file', function (done) {
-  //   var s3 = mockS3()
-  //   var form = new FormData()
-  //   var storage = multerS3({
-  //     s3: s3,
-  //     bucket: 'test',
-  //     key: 'mock-location',
-  //     contentType: multerS3.AUTO_CONTENT_TYPE
-  //   })
-  //   var upload = multer({ storage: storage })
-  //   var parser = upload.array('images', 2)
-  //   var image1 = fs.createReadStream(path.join(__dirname, 'files', 'ffffff.png'))
-  //   var image2 = fs.createReadStream(path.join(__dirname, 'files', 'test2.svg'))
+      done()
+    })
+  })
 
-  //   form.append('name', 'Multer')
-  //   form.append('images', image1)
-  //   form.append('images', image2)
+  it('uploads a PNG and SVG file', function (done) {
+    var s3 = mockS3()
+    var form = new FormData()
+    var storage = multerS3({
+      s3: s3,
+      bucket: 'test',
+      key: 'mock-location',
+      contentType: multerS3.AUTO_CONTENT_TYPE
+    })
+    var upload = multer({ storage: storage })
+    var parser = upload.array('images', 2)
+    var image1 = fs.createReadStream(path.join(__dirname, 'files', 'ffffff.png'))
+    var image2 = fs.createReadStream(path.join(__dirname, 'files', 'test2.svg'))
 
-  //   submitForm(parser, form, function (err, req) {
-  //     assert.ifError(err)
+    form.append('name', 'Multer')
+    form.append('images', image1)
+    form.append('images', image2)
 
-  //     assert.equal(req.body.name, 'Multer')
+    submitForm(parser, form, function (err, req) {
+      assert.ifError(err)
 
-  //     assert.equal(req.files[0].fieldname, 'images')
-  //     assert.equal(req.files[0].mimetype, 'image/png')
-  //     assert.equal(req.files[0].originalname, 'ffffff.png')
-  //     assert.equal(req.files[0].size, 68)
-  //     assert.equal(req.files[0].bucket, 'test')
-  //     assert.equal(req.files[0].etag, 'mock-etag')
-  //     assert.equal(req.files[0].location, 'https//test.hostname/mock-location')
+      assert.equal(req.body.name, 'Multer')
 
-  //     assert.equal(req.files[1].fieldname, 'images')
-  //     assert.equal(req.files[1].mimetype, 'image/svg+xml')
-  //     assert.equal(req.files[1].originalname, 'test2.svg')
-  //     assert.equal(req.files[1].size, 285)
-  //     assert.equal(req.files[1].bucket, 'test')
-  //     assert.equal(req.files[1].etag, 'mock-etag')
-  //     assert.equal(req.files[1].location, 'https//test.hostname/mock-location')
-  //   })
-  // })
+      assert.equal(req.files[0].fieldname, 'images')
+      assert.equal(req.files[0].mimetype, 'image/png')
+      assert.equal(req.files[0].originalname, 'ffffff.png')
+      assert.equal(req.files[0].size, 68)
+      assert.equal(req.files[0].bucket, 'test')
+      assert.equal(req.files[0].etag, 'mock-etag')
+      assert.equal(req.files[0].location, 'https//test.hostname/mock-location')
+
+      assert.equal(req.files[1].fieldname, 'images')
+      assert.equal(req.files[1].mimetype, 'image/svg+xml')
+      assert.equal(req.files[1].originalname, 'test2.svg')
+      assert.equal(req.files[1].size, 285)
+      assert.equal(req.files[1].bucket, 'test')
+      assert.equal(req.files[1].etag, 'mock-etag')
+      assert.equal(req.files[1].location, 'https//test.hostname/mock-location')
+
+      done()
+    })
+  })
 })

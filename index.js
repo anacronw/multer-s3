@@ -148,8 +148,9 @@ function S3Storage (opts) {
 
   switch (typeof opts.contentType) {
     case 'function': this.getContentType = opts.contentType; break
+    case 'string': this.getContentType = staticValue(opts.contentType); break
     case 'undefined': this.getContentType = defaultContentType; break
-    default: throw new TypeError('Expected opts.contentType to be undefined or function')
+    default: throw new TypeError('Expected opts.contentType to be undefined, string or function')
   }
 
   switch (typeof opts.metadata) {
@@ -231,16 +232,23 @@ function S3Storage (opts) {
       default: throw new TypeError('Expected opts.transformer[].transform to be function')
     }
 
+    switch (typeof transformer.contentType) {
+      case 'function': transformer.getContentType = transformer.contentType; break
+      case 'string': transformer.getContentType = staticValue(transformer.contentType); break
+      case 'undefined': transformer.getContentType = staticValue(undefined); break
+      default: throw new TypeError('Expected opts.transformer[].contentType to be undefined, string or function')
+    }
+
     return transformer
   })
 }
 
-S3Storage.prototype.directUpload = function (opts, file, cb, piper, key, id) {
+S3Storage.prototype.directUpload = function (opts, file, cb) {
   var currentSize = 0
 
   var params = {
     Bucket: opts.bucket,
-    Key: key || opts.key,
+    Key: opts.key,
     ACL: opts.acl,
     CacheControl: opts.cacheControl,
     ContentType: opts.contentType,
@@ -248,7 +256,7 @@ S3Storage.prototype.directUpload = function (opts, file, cb, piper, key, id) {
     StorageClass: opts.storageClass,
     ServerSideEncryption: opts.serverSideEncryption,
     SSEKMSKeyId: opts.sseKmsKeyId,
-    Body: piper ? (opts.replacementStream || file.stream).pipe(piper) : (opts.replacementStream || file.stream)
+    Body: opts.piper ? (opts.replacementStream || file.stream).pipe(opts.piper) : (opts.replacementStream || file.stream)
   }
 
   if (opts.contentDisposition) {
@@ -272,10 +280,10 @@ S3Storage.prototype.directUpload = function (opts, file, cb, piper, key, id) {
     if (err) return cb(err)
 
     cb(null, {
-      id: id,
+      id: opts.id,
       size: currentSize,
       bucket: opts.bucket,
-      key: key || opts.key,
+      key: opts.key,
       acl: opts.acl,
       contentType: opts.contentType,
       contentDisposition: opts.contentDisposition,
@@ -303,16 +311,28 @@ S3Storage.prototype.transformUpload = function (opts, req, file, cb) {
       if (err) return cb(err)
 
       keys.forEach(function (key, i) {
-        storage.transformers[i].transform(req, file, function (err, piper) {
-          if (err) return cb(err)
-          var id = storage.transformers[i].id || i
+        var transform = storage.transformers[i].transform.bind(storage, req, file)
+        var getContentType = storage.transformers[i].getContentType.bind(storage, req, file)
 
-          storage.directUpload(opts, file, function (err, result) {
+        getContentType(function (err, contentType) {
+          if (err) return cb(err)
+
+          transform(function (err, piper) {
             if (err) return cb(err)
 
-            transformations[id] = result
-            if (--pending === 0) cb(null, { transformations: transformations })
-          }, piper, key, id)
+            var transformerOpts = Object.assign({}, opts)
+            transformerOpts.id = storage.transformers[i].id || i
+            transformerOpts.key = key
+            transformerOpts.contentType = contentType || transformerOpts.contentType
+            transformerOpts.piper = piper
+
+            storage.directUpload(transformerOpts, file, function (err, result) {
+              if (err) return cb(err)
+
+              transformations[transformerOpts.id] = result
+              if (--pending === 0) cb(null, { transformations: transformations })
+            })
+          })
         })
       })
     }
