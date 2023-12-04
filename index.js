@@ -59,6 +59,12 @@ function autoContentType (req, file, cb) {
     return svgRegex.test(svg)
   }
 
+  var outStream = new stream.PassThrough()
+
+  stream.pipeline(file.stream, outStream, function (err) {
+    if (err) return cb(err)
+  })
+
   file.stream.once('data', function (firstChunk) {
     fileType.fromBuffer(firstChunk).then(function (type) {
       var mime = 'application/octet-stream' // default type
@@ -69,11 +75,6 @@ function autoContentType (req, file, cb) {
       } else if (type) {
         mime = type.mime
       }
-
-      var outStream = new stream.PassThrough()
-
-      outStream.write(firstChunk)
-      file.stream.pipe(outStream)
 
       cb(null, mime, outStream)
     })
