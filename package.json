@@ -27,9 +27,7 @@
   "homepage": "https://github.com/badunk/multer-s3#readme",
   "dependencies": {
     "@aws-sdk/lib-storage": "^3.46.0",
-    "file-type": "^3.3.0",
-    "html-comment-regex": "^1.1.2",
-    "run-parallel": "^1.1.6"
+    "file-type": "^16.5.4"
   },
   "peerDependencies": {
     "@aws-sdk/client-s3": "^3.0.0"
